@@ -3,7 +3,7 @@ import './globals.css';
 
 export const metadata = {
   title: '조각투두',
-  description: '미루고 있는 거 하나만 적어봐요',
+  description: '시작해야 하는 일 하나만 적어봐요',
 };
 
 export default function RootLayout({ children }) {

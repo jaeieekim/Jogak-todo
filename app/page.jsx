@@ -2,6 +2,16 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
+import TodoCard from '../components/TodoCard';
+import Button from '../components/Button';
+import WeekStrip from '../components/WeekStrip';
+import MascotSpeechBubble from '../components/MascotSpeechBubble';
+import {
+  getMascotState,
+  MASCOT_STATE_MESSAGES,
+  MASCOT_MOMENT_MESSAGE,
+  MASCOT_MOMENT_DURATION_MS,
+} from '../lib/mascotState';
 import { generateSteps, GenerateStepsError } from '../lib/generateSteps';
 import { sampleStrategies } from '../lib/prompts/miniStepPrompt';
 import { track, EVENTS } from '../lib/mixpanel';
@@ -13,8 +23,6 @@ import {
 } from '../lib/storage';
 
 // ---------- 날짜 유틸 ----------
-const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토'];
-
 function toDateKey(d) {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, '0');
@@ -54,7 +62,11 @@ export default function HomePage() {
   const [toast, setToast] = useState(null);
   const [showFirstDonePopup, setShowFirstDonePopup] = useState(false);
   const [dragId, setDragId] = useState(null);
+  // 전체 완료된 카드 중 사용자가 탭해서 다시 펼친 카드 id 집합. 없으면 완료 카드는 기본 축소.
+  const [expandedCompletedIds, setExpandedCompletedIds] = useState(new Set());
   const toastTimer = useRef(null);
+  const [mascotMoment, setMascotMoment] = useState(false);
+  const mascotMomentTimer = useRef(null);
 
   // ---------- 저장/로드 ----------
   useEffect(() => {
@@ -77,6 +89,13 @@ export default function HomePage() {
     if (toastTimer.current) clearTimeout(toastTimer.current);
     setToast(message);
     toastTimer.current = setTimeout(() => setToast(null), 2500);
+  }
+
+  // 체크하는 순간 마스코트 말풍선에 순간 반응을 3초 보여준 뒤 상시 상태 문구로 복귀
+  function showMascotMoment() {
+    if (mascotMomentTimer.current) clearTimeout(mascotMomentTimer.current);
+    setMascotMoment(true);
+    mascotMomentTimer.current = setTimeout(() => setMascotMoment(false), MASCOT_MOMENT_DURATION_MS);
   }
 
   // ---------- 할 일 추가 ----------
@@ -134,6 +153,8 @@ export default function HomePage() {
       nextTodo.steps.filter((s) => s.checked).length + (nextTodo.originalChecked ? 1 : 0);
     const justChecked = nextCheckedCount > prevCheckedCount;
 
+    if (justChecked) showMascotMoment();
+
     if (!isTodoComplete(prevTodo) && isTodoComplete(nextTodo)) {
       showToast('오늘 몫은 충분해요');
       track(EVENTS.ALL_COMPLETE, { todoId: prevTodo.id });
@@ -160,6 +181,36 @@ export default function HomePage() {
 
   function toggleOriginal(todoId) {
     applyTodoUpdate(todoId, (todo) => ({ ...todo, originalChecked: !todo.originalChecked }));
+  }
+
+  // 전체 완료된 카드만 축소/재펼침 토글 (미완료 카드는 항상 펼침, 대상 아님)
+  function toggleCompletedCard(todoId) {
+    setExpandedCompletedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(todoId)) next.delete(todoId);
+      else next.add(todoId);
+      return next;
+    });
+  }
+
+  function toggleMenu(todoId) {
+    setMenuOpenId((prev) => (prev === todoId ? null : todoId));
+  }
+
+  function closeMenu() {
+    setMenuOpenId(null);
+  }
+
+  function startEdit(todoId) {
+    setMenuOpenId(null);
+    setEditModeId(todoId);
+    const todo = todos.find((t) => t.id === todoId);
+    if (!todo) return;
+    const checkedItems = todo.steps.filter((s) => s.checked).length + (todo.originalChecked ? 1 : 0);
+    const totalItems = todo.steps.length + 1;
+    if (checkedItems === totalItems) {
+      setExpandedCompletedIds((prev) => new Set(prev).add(todoId));
+    }
   }
 
   // ---------- 메뉴 액션 ----------
@@ -232,8 +283,21 @@ export default function HomePage() {
   }
 
   // ---------- 주간 내비게이션 ----------
-  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+  const weekDays = Array.from({ length: 7 }, (_, i) => {
+    const d = addDays(weekStart, i);
+    return { key: toDateKey(d), dayOfWeek: d.getDay(), dayOfMonth: d.getDate() };
+  });
   const todayKey = toDateKey(today);
+  const weekHeaderLabel = `${weekStart.getFullYear()}년 ${weekStart.getMonth() + 1}월`;
+
+  // ---------- 할 일 리스트 제목 ----------
+  const [, selectedMonth, selectedDay] = selectedDate.split('-').map(Number);
+  const listTitle =
+    selectedDate === todayKey ? '오늘 할 일' : `${selectedMonth}월 ${selectedDay}일 할 일`;
+
+  // ---------- 마스코트 말풍선 ----------
+  const mascotState = getMascotState(todos);
+  const mascotMessage = mascotMoment ? MASCOT_MOMENT_MESSAGE : MASCOT_STATE_MESSAGES[mascotState];
 
   return (
     <div className="mx-auto min-h-screen w-full max-w-[480px] bg-bg-default">
@@ -245,62 +309,19 @@ export default function HomePage() {
         </header>
 
         {/* 주간 내비게이션 (WeekStrip) */}
-        <section className="px-20px py-12px">
-          <div className="flex items-center justify-between pb-8px">
-            <button
-              type="button"
-              aria-label="이전 주"
-              onClick={() => setWeekStart(addDays(weekStart, -7))}
-              className="flex h-[36px] w-[36px] items-center justify-center rounded-8 text-text-muted transition duration-[96ms] ease-out active:scale-[0.98]"
-            >
-              <ChevronLeftIcon />
-            </button>
-            <span className="text-15 font-medium tabular-nums text-text-primary">
-              {weekStart.getFullYear()}년 {weekStart.getMonth() + 1}월
-            </span>
-            <button
-              type="button"
-              aria-label="다음 주"
-              onClick={() => setWeekStart(addDays(weekStart, 7))}
-              className="flex h-[36px] w-[36px] items-center justify-center rounded-8 text-text-muted transition duration-[96ms] ease-out active:scale-[0.98]"
-            >
-              <ChevronRightIcon />
-            </button>
-          </div>
-          <div className="flex justify-between">
-            {weekDays.map((d) => {
-              const key = toDateKey(d);
-              const isSelected = key === selectedDate;
-              const isToday = key === todayKey;
-              return (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => setSelectedDate(key)}
-                  className="flex flex-col items-center gap-4px"
-                >
-                  <span className="text-12 font-normal text-text-muted">
-                    {DAY_LABELS[d.getDay()]}
-                  </span>
-                  <span
-                    className={`flex h-[36px] w-[36px] items-center justify-center rounded-full text-15 font-medium tabular-nums transition duration-[96ms] ease-out active:scale-[0.98] ${
-                      isSelected
-                        ? 'bg-brand-primary text-text-on-brand'
-                        : isToday
-                          ? 'text-brand-primary'
-                          : 'text-text-secondary'
-                    }`}
-                  >
-                    {d.getDate()}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </section>
+        <WeekStrip
+          weekDays={weekDays}
+          selectedDate={selectedDate}
+          todayKey={todayKey}
+          headerLabel={weekHeaderLabel}
+          onPrevWeek={() => setWeekStart(addDays(weekStart, -7))}
+          onNextWeek={() => setWeekStart(addDays(weekStart, 7))}
+          onSelectDate={setSelectedDate}
+        />
 
-        {/* 브랜드 캐릭터 마스코트 */}
-        <div className="flex justify-center py-8px">
+        {/* 브랜드 캐릭터 마스코트 + 말풍선 (머리 위 중앙 정렬) */}
+        <div className="flex flex-col items-center gap-12px py-8px">
+          <MascotSpeechBubble message={mascotMessage} />
           <Image
             src="/mascot-star.png"
             alt="조각투두 마스코트"
@@ -319,24 +340,21 @@ export default function HomePage() {
               value={inputText}
               maxLength={50}
               onChange={(e) => setInputText(e.target.value)}
-              placeholder="미루고 있는 거 하나만 적어봐요"
-              className="min-w-0 flex-1 rounded-12 bg-bg-surface px-20px py-16px text-17 font-normal text-text-primary outline-none placeholder:text-text-dim focus:ring-2 focus:ring-brand-primary"
+              placeholder="시작해야 하는 일 하나만 적어봐요"
+              className="min-w-0 flex-1 rounded-12 bg-bg-surface px-20px py-16px text-15 font-normal text-text-primary outline-none placeholder:text-text-dim focus:ring-2 focus:ring-brand-primary"
             />
-            <button
-              type="submit"
-              disabled={!inputText.trim() || generating}
-              className="shrink-0 rounded-8 bg-brand-primary px-20px py-[14px] text-17 font-medium text-text-on-brand transition duration-[96ms] ease-out active:scale-[0.98] disabled:opacity-40"
-            >
-              {generating ? '잘게 쪼개는 중이에요' : '할일 쪼개기'}
-            </button>
+            <Button type="submit" disabled={!inputText.trim() || generating} className="shrink-0 px-20px">
+              {generating ? '잘게 쪼개는 중이에요' : '할일 등록'}
+            </Button>
           </form>
           <p className="px-4px pt-8px text-12 font-normal text-text-dim">
-            할일을 쉽게 시작할 수 있도록 작게 조각내요
+            할일을 쉽게 시작할 수 있도록 작게 조각내어 드릴게요
           </p>
         </section>
 
         {/* 할 일 리스트 (TodoList) */}
-        <section className="px-20px pt-12px">
+        <section className="px-20px pt-8px">
+          <h2 className="pb-24px text-17 font-medium text-text-secondary">{listTitle}</h2>
           {todos.length === 0 ? (
             <p className="py-48px text-center text-15 font-normal text-text-dim">
               부담 없이, 하나면 돼요
@@ -344,135 +362,36 @@ export default function HomePage() {
           ) : (
             <ul className="flex flex-col gap-12px">
               {todos.map((todo) => {
-                const checkedSteps = todo.steps.filter((s) => s.checked).length;
+                const checkedItems =
+                  todo.steps.filter((s) => s.checked).length + (todo.originalChecked ? 1 : 0);
                 const totalItems = todo.steps.length + 1;
-                const checkedItems = checkedSteps + (todo.originalChecked ? 1 : 0);
                 const isEditing = editModeId === todo.id;
+                const isComplete = checkedItems === totalItems;
+                const isCollapsed = isComplete && !expandedCompletedIds.has(todo.id);
 
                 return (
-                  <li
+                  <TodoCard
                     key={todo.id}
+                    todo={todo}
+                    isMenuOpen={menuOpenId === todo.id}
+                    onToggleMenu={toggleMenu}
+                    onCloseMenu={closeMenu}
+                    isEditing={isEditing}
+                    onStartEdit={startEdit}
+                    onFinishEdit={finishEdit}
+                    onEditStepText={editStepText}
+                    onResplit={resplitTodo}
+                    onDelete={deleteTodo}
+                    onToggleStep={toggleStep}
+                    onToggleOriginal={toggleOriginal}
+                    isCollapsed={isCollapsed}
+                    isComplete={isComplete}
+                    onToggleCollapse={toggleCompletedCard}
                     draggable={!isEditing}
                     onDragStart={() => setDragId(todo.id)}
                     onDragOver={(e) => e.preventDefault()}
                     onDrop={() => handleDrop(todo.id)}
-                    className="rounded-12 border border-border bg-bg-default p-16px shadow-[0_1px_3px_rgba(25,31,40,0.04)]"
-                  >
-                    {/* 헤더 행 — 64px 고정 */}
-                    <div className="flex h-[64px] items-center gap-12px">
-                      <Checkbox
-                        checked={todo.originalChecked}
-                        onToggle={() => toggleOriginal(todo.id)}
-                        label={`${todo.text} 했어요`}
-                      />
-                      <div className="flex min-w-0 flex-1 items-center gap-8px">
-                        <span
-                          className={`truncate text-17 font-normal ${
-                            todo.originalChecked ? 'text-text-dim' : 'text-text-secondary'
-                          }`}
-                        >
-                          {todo.text}
-                        </span>
-                        <span className="shrink-0 rounded-4 bg-bg-surface px-8px py-4px text-12 font-normal tabular-nums text-text-muted">
-                          {checkedItems}/{totalItems}
-                        </span>
-                      </div>
-                      <div className="relative shrink-0">
-                        <button
-                          type="button"
-                          aria-label="메뉴"
-                          onClick={() => setMenuOpenId(menuOpenId === todo.id ? null : todo.id)}
-                          className="flex h-[36px] w-[36px] items-center justify-center rounded-8 text-text-muted transition duration-[96ms] ease-out active:scale-[0.98]"
-                        >
-                          <DotsIcon />
-                        </button>
-                        {menuOpenId === todo.id && (
-                          <>
-                            <button
-                              type="button"
-                              aria-label="메뉴 닫기"
-                              onClick={() => setMenuOpenId(null)}
-                              className="fixed inset-0 z-10 cursor-default"
-                            />
-                            <div className="absolute right-0 z-20 w-[160px] rounded-12 border border-border bg-bg-default py-8px shadow-[0_8px_24px_rgba(25,31,40,0.08)]">
-                              <MenuItem
-                                onClick={() => {
-                                  setMenuOpenId(null);
-                                  setEditModeId(todo.id);
-                                }}
-                              >
-                                스텝 편집
-                              </MenuItem>
-                              <MenuItem onClick={() => resplitTodo(todo.id)}>할일 다시 쪼개기</MenuItem>
-                              <MenuItem danger onClick={() => deleteTodo(todo.id)}>
-                                삭제
-                              </MenuItem>
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* 체크리스트 — 헤더와 같은 카드 안, 테두리·구분선 없이 항상 표시 */}
-                    <ul className="flex flex-col gap-12px pt-12px">
-                      {todo.steps.map((step) => (
-                        <li key={step.id} className="flex items-center gap-12px">
-                          <Checkbox
-                            checked={step.checked}
-                            onToggle={() => toggleStep(todo.id, step.id)}
-                            label={`${step.text} 했어요`}
-                          />
-                          {isEditing ? (
-                            <input
-                              type="text"
-                              value={step.text}
-                              maxLength={40}
-                              autoFocus={step.text === ''}
-                              onChange={(e) => editStepText(todo.id, step.id, e.target.value)}
-                              className="min-w-0 flex-1 rounded-8 bg-bg-surface px-12px py-8px text-15 font-normal text-text-primary outline-none focus:ring-2 focus:ring-brand-primary"
-                            />
-                          ) : (
-                            <span
-                              className={`min-w-0 flex-1 text-15 font-normal ${
-                                step.checked ? 'text-text-dim' : 'text-text-secondary'
-                              }`}
-                            >
-                              {step.text}
-                            </span>
-                          )}
-                          <span className="shrink-0 text-12 font-normal tabular-nums text-text-dim">
-                            {step.minutes}분
-                          </span>
-                        </li>
-                      ))}
-                      {/* 원본 할 일 — 항상 맨 아래, 시간 표기 없음 */}
-                      <li className="flex items-center gap-12px">
-                        <Checkbox
-                          checked={todo.originalChecked}
-                          onToggle={() => toggleOriginal(todo.id)}
-                          label={`${todo.text} 했어요`}
-                        />
-                        <span
-                          className={`min-w-0 flex-1 text-15 font-normal ${
-                            todo.originalChecked ? 'text-text-dim' : 'text-text-secondary'
-                          }`}
-                        >
-                          {todo.text}
-                        </span>
-                      </li>
-                    </ul>
-                    {isEditing && (
-                      <div className="pt-16px">
-                        <button
-                          type="button"
-                          onClick={() => finishEdit(todo.id)}
-                          className="w-full rounded-8 bg-bg-tint py-[14px] text-15 font-medium text-brand-pressed transition duration-[96ms] ease-out active:scale-[0.98]"
-                        >
-                          편집 끝내기
-                        </button>
-                      </div>
-                    )}
-                  </li>
+                  />
                 );
               })}
             </ul>
@@ -508,26 +427,25 @@ export default function HomePage() {
               이 기능이 일을 시작하는 데 도움이 됐나요?
             </p>
             <div className="flex gap-8px">
-              <button
-                type="button"
+              <Button
+                className="flex-1"
                 onClick={() => {
                   track(EVENTS.FEEDBACK_RESPONDED, { helpful: true });
                   setShowFirstDonePopup(false);
                 }}
-                className="flex-1 rounded-8 bg-brand-primary py-[14px] text-17 font-medium text-text-on-brand transition duration-[96ms] ease-out active:scale-[0.98]"
               >
                 도움됐어요
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
+                variant="secondary"
+                className="flex-1"
                 onClick={() => {
                   track(EVENTS.FEEDBACK_RESPONDED, { helpful: false });
                   setShowFirstDonePopup(false);
                 }}
-                className="flex-1 rounded-8 bg-bg-tint py-[14px] text-17 font-medium text-brand-pressed transition duration-[96ms] ease-out active:scale-[0.98]"
               >
                 도움이 안 됐어요
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -560,90 +478,7 @@ export default function HomePage() {
 
 // ---------- 화면 내 공통 조각 (컴포넌트 추출 아님 — 화면 파일 내부 헬퍼) ----------
 
-function Checkbox({ checked, onToggle, label }) {
-  return (
-    <button
-      type="button"
-      role="checkbox"
-      aria-checked={checked}
-      aria-label={label}
-      onClick={onToggle}
-      className={`flex h-[24px] w-[24px] shrink-0 items-center justify-center rounded-full border transition duration-[96ms] ease-out active:scale-[0.98] ${
-        checked ? 'border-status-success bg-status-success' : 'border-border-strong bg-bg-default'
-      }`}
-    >
-      {checked && <CheckIcon />}
-    </button>
-  );
-}
-
-function MenuItem({ children, onClick, danger = false }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`block w-full px-16px py-12px text-left text-15 font-normal ${
-        danger ? 'text-status-danger' : 'text-text-secondary'
-      }`}
-    >
-      {children}
-    </button>
-  );
-}
-
 // ---------- 아이콘 (플랫 벡터, currentColor) ----------
-
-function CheckIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="text-text-on-brand">
-      <path
-        d="M5 12.5L10 17.5L19 7"
-        stroke="currentColor"
-        strokeWidth="3"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function ChevronLeftIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-      <path
-        d="M15 5L8 12L15 19"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function ChevronRightIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-      <path
-        d="M9 5L16 12L9 19"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function DotsIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-      <circle cx="5" cy="12" r="1.8" />
-      <circle cx="12" cy="12" r="1.8" />
-      <circle cx="19" cy="12" r="1.8" />
-    </svg>
-  );
-}
 
 function HomeIcon() {
   return (
