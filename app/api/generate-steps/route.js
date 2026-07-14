@@ -13,10 +13,18 @@ const FALLBACK_RESULT = {
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
+// 프롬프트에서 "마크다운 금지"를 지시해도 모델이 ```json ... ``` 코드펜스로
+// 감싸는 경우가 있어 방어적으로 벗겨낸다.
+function stripCodeFence(text) {
+  const trimmed = text.trim();
+  const fenceMatch = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/);
+  return fenceMatch ? fenceMatch[1] : trimmed;
+}
+
 function validateAndExtract(rawText) {
   let parsed;
   try {
-    parsed = JSON.parse(rawText);
+    parsed = JSON.parse(stripCodeFence(rawText));
   } catch {
     return null;
   }
@@ -68,19 +76,23 @@ export async function POST(request) {
   let rawText;
   try {
     rawText = await callClaude(todoText, strategyCandidates);
-  } catch {
+  } catch (err) {
     // API 오류·타임아웃 — 사용자 재시도 유도 (자동 재요청 아님, PRD 7번)
+    console.error('[generate-steps] Claude 호출 실패:', err?.status, err?.message);
     return Response.json({ error: 'api_error' }, { status: 502 });
   }
 
   let result = validateAndExtract(rawText);
+  if (!result) console.error('[generate-steps] 1차 검증 실패, 원본 응답:', rawText);
 
   if (!result) {
     // 파싱 실패/필드·조건 위반 — 1회 자동 재요청
     try {
       rawText = await callClaude(todoText, strategyCandidates);
       result = validateAndExtract(rawText);
-    } catch {
+      if (!result) console.error('[generate-steps] 재요청도 검증 실패, 원본 응답:', rawText);
+    } catch (err) {
+      console.error('[generate-steps] Claude 재요청 실패:', err?.status, err?.message);
       return Response.json({ error: 'api_error' }, { status: 502 });
     }
   }
