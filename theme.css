@@ -1,0 +1,120 @@
+/* ============================================
+   theme.css — 플레이풀 투두리스트 디자인 토큰
+   Single Source of Truth: playful-todolist-ko.md
+   ============================================ */
+
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.css');
+
+:root {
+  /* ============================================
+     1계층 — Primitive
+     ============================================ */
+  /* Orange */
+  --orange-50: #FEF2E0;
+  --orange-100: #FFE4BD;
+  --orange-500: #FF9E00;
+  --orange-600: #E68E00;
+  --orange-700: #B87100;
+
+  /* Gray */
+  --gray-0: #FFFFFF;
+  --gray-50: #F9FAFB;
+  --gray-100: #F2F4F6;
+  --gray-200: #E5E8EB;
+  --gray-300: #D1D6DB;
+  --gray-500: #8B95A1;
+  --gray-600: #6B7684;
+  --gray-800: #333D4B;
+  --gray-900: #191F28;
+
+  /* Green */
+  --green-50: #E6FAE7;
+  --green-500: #00C807;
+
+  /* Red */
+  --red-50: #FEECEE;
+  --red-500: #F04452;
+
+  /* Blue */
+  --blue-50: #EAF3FE;
+  --blue-500: #3182F6;
+
+  /* ============================================
+     2계층 — Semantic (컴포넌트는 이 변수만 사용)
+     ============================================ */
+  --color-border-default: var(--gray-200);
+  --color-border-strong: var(--gray-300);
+
+  --color-text-primary: var(--gray-900);
+  --color-text-secondary: var(--gray-800);
+  --color-text-muted: var(--gray-600);
+  --color-text-dim: var(--gray-500);
+  --color-text-on-brand: var(--gray-0);
+  --color-text-on-inverse: var(--gray-0);
+
+  --color-bg-default: var(--gray-0);
+  --color-bg-alt: var(--gray-50);
+  --color-bg-surface: var(--gray-100);
+  --color-bg-tint: var(--orange-50);
+  --color-bg-inverse: var(--gray-900);
+
+  --color-brand-primary: var(--orange-500);
+  --color-brand-hover: var(--orange-600);
+  --color-brand-pressed: var(--orange-700);
+  --color-brand-soft: var(--orange-50);
+
+  --color-status-success: var(--green-500);
+  --color-status-warning: var(--red-500);
+  --color-status-danger: var(--red-500);
+  --color-status-info: var(--blue-500);
+
+  /* ============================================
+     Spacing (4px 베이스, 8종)
+     ============================================ */
+  --spacing-4: 4px;
+  --spacing-8: 8px;
+  --spacing-12: 12px;
+  --spacing-16: 16px;
+  --spacing-20: 20px;
+  --spacing-24: 24px;
+  --spacing-32: 32px;
+  --spacing-48: 48px;
+
+  /* ============================================
+     Radius (7종)
+     ============================================ */
+  --radius-4: 4px;
+  --radius-8: 8px;
+  --radius-12: 12px;
+  --radius-16: 16px;
+  --radius-24: 24px;
+  --radius-32: 32px;
+  --radius-full: 9999px;
+
+  /* ============================================
+     Typography
+     ============================================ */
+  --font-family-base: 'Pretendard Variable', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', sans-serif;
+
+  --font-size-12: 12px;
+  --font-size-14: 14px;
+  --font-size-15: 15px;
+  --font-size-17: 17px;
+  --font-size-20: 20px;
+  --font-size-24: 24px;
+  --font-size-32: 32px;
+  --font-size-40: 40px;
+  --font-size-50: 50px;
+  --font-size-66: 66px;
+
+  --line-height-body: 1.5;
+  --line-height-heading: 1.4;
+
+  --letter-spacing-default: -0.01em;
+}
+
+/* 전역 자간·서체 적용 — 예외 없음 */
+html {
+  font-family: var(--font-family-base);
+  letter-spacing: var(--letter-spacing-default);
+}
