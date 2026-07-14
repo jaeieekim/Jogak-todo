@@ -8,9 +8,12 @@ import WeekStrip from '../components/WeekStrip';
 import MascotSpeechBubble from '../components/MascotSpeechBubble';
 import {
   getMascotState,
+  MASCOT_STATE,
   MASCOT_STATE_MESSAGES,
-  MASCOT_MOMENT_MESSAGE,
   MASCOT_MOMENT_DURATION_MS,
+  MOMENT_EVENT,
+  pickMomentMessage,
+  pickInProgressMessage,
 } from '../lib/mascotState';
 import { generateSteps, GenerateStepsError } from '../lib/generateSteps';
 import { sampleStrategies } from '../lib/prompts/miniStepPrompt';
@@ -20,6 +23,7 @@ import {
   saveTodosByDate,
   wasFirstDonePopupShown,
   markFirstDonePopupShown,
+  saveFirstFeedback,
 } from '../lib/storage';
 
 // ---------- 날짜 유틸 ----------
@@ -65,8 +69,13 @@ export default function HomePage() {
   // 전체 완료된 카드 중 사용자가 탭해서 다시 펼친 카드 id 집합. 없으면 완료 카드는 기본 축소.
   const [expandedCompletedIds, setExpandedCompletedIds] = useState(new Set());
   const toastTimer = useRef(null);
-  const [mascotMoment, setMascotMoment] = useState(false);
+  const [mascotMoment, setMascotMoment] = useState(null); // 순간 반응 메시지 문자열 | null
   const mascotMomentTimer = useRef(null);
+  const lastMascotMomentMessage = useRef(null);
+  const [feedbackRating, setFeedbackRating] = useState(0);
+  // 진행 중 상시 상태 문구 — ② 미니스텝 체크 시 순간 반응과 동일 시점에 함께 로테이션
+  const [inProgressMessage, setInProgressMessage] = useState(() => pickInProgressMessage(null));
+  const lastInProgressMessage = useRef(inProgressMessage);
 
   // ---------- 저장/로드 ----------
   useEffect(() => {
@@ -91,11 +100,21 @@ export default function HomePage() {
     toastTimer.current = setTimeout(() => setToast(null), 2500);
   }
 
-  // 체크하는 순간 마스코트 말풍선에 순간 반응을 3초 보여준 뒤 상시 상태 문구로 복귀
-  function showMascotMoment() {
+  // 행동 이벤트(①②③) 직후 마스코트 말풍선에 순간 반응을 3초 보여준 뒤 상시 상태 문구로 복귀.
+  // 직전과 같은 문구가 연속으로 나오지 않도록 로테이션.
+  function showMascotMoment(event) {
     if (mascotMomentTimer.current) clearTimeout(mascotMomentTimer.current);
-    setMascotMoment(true);
-    mascotMomentTimer.current = setTimeout(() => setMascotMoment(false), MASCOT_MOMENT_DURATION_MS);
+    const message = pickMomentMessage(event, lastMascotMomentMessage.current);
+    lastMascotMomentMessage.current = message;
+    setMascotMoment(message);
+    mascotMomentTimer.current = setTimeout(() => setMascotMoment(null), MASCOT_MOMENT_DURATION_MS);
+  }
+
+  // 진행 중 상시 상태 문구 로테이션 — ② 미니스텝 체크 시(showMascotMoment STEP_CHECKED)와 동일 시점에 호출
+  function refreshInProgressMessage() {
+    const message = pickInProgressMessage(lastInProgressMessage.current);
+    lastInProgressMessage.current = message;
+    setInProgressMessage(message);
   }
 
   // ---------- 할 일 추가 ----------
@@ -137,6 +156,7 @@ export default function HomePage() {
     setGenerating(false);
     track(EVENTS.MINISTEP_GENERATED, { strategy: result.strategy });
     showToast('5분만 해볼까요?');
+    showMascotMoment(MOMENT_EVENT.MINISTEP_GENERATED);
   }
 
   // ---------- 체크 토글 ----------
@@ -152,19 +172,33 @@ export default function HomePage() {
     const nextCheckedCount =
       nextTodo.steps.filter((s) => s.checked).length + (nextTodo.originalChecked ? 1 : 0);
     const justChecked = nextCheckedCount > prevCheckedCount;
+    const justCompletedTodo = !isTodoComplete(prevTodo) && isTodoComplete(nextTodo);
+    const isFirstEverCompletion = justCompletedTodo && !wasFirstDonePopupShown();
 
-    if (justChecked) showMascotMoment();
-
-    if (!isTodoComplete(prevTodo) && isTodoComplete(nextTodo)) {
+    if (justCompletedTodo) {
       showToast('오늘 몫은 충분해요');
       track(EVENTS.ALL_COMPLETE, { todoId: prevTodo.id });
-      if (!wasFirstDonePopupShown()) {
+
+      const nextTodos = todos.map((t) => (t.id === todoId ? nextTodo : t));
+      const dayNowAllComplete = getMascotState(nextTodos) === MASCOT_STATE.ALL_COMPLETE;
+
+      if (isFirstEverCompletion) {
+        // 생애 첫 완수 — 순간 반응(③·⑤) 전부 생략하고 별점 피드백 팝업으로 대체
         markFirstDonePopupShown();
         setShowFirstDonePopup(true);
+      } else if (dayNowAllComplete) {
+        // ⑤ 오늘 할 일 전체 완수가 ③ 개별 할일 완수보다 우선
+        showMascotMoment(MOMENT_EVENT.ALL_TODOS_COMPLETE);
+      } else {
+        showMascotMoment(MOMENT_EVENT.TODO_COMPLETED);
       }
-    } else if (justChecked && prevCheckedCount === 0) {
-      showToast('시작이 반이에요. 이대로 잘하고 있어요');
-      track(EVENTS.FIRST_STEP_CHECKED, { todoId: prevTodo.id });
+    } else if (justChecked) {
+      showMascotMoment(MOMENT_EVENT.STEP_CHECKED);
+      refreshInProgressMessage();
+      if (prevCheckedCount === 0) {
+        showToast('시작이 반이에요. 이대로 잘하고 있어요');
+        track(EVENTS.FIRST_STEP_CHECKED, { todoId: prevTodo.id });
+      }
     }
   }
 
@@ -250,6 +284,7 @@ export default function HomePage() {
     }));
     track(EVENTS.RESPLIT, { todoId, strategy: result.strategy });
     showToast('5분만 해볼까요?');
+    showMascotMoment(MOMENT_EVENT.MINISTEP_GENERATED);
   }
 
   function editStepText(todoId, stepId, text) {
@@ -288,16 +323,38 @@ export default function HomePage() {
     return { key: toDateKey(d), dayOfWeek: d.getDay(), dayOfMonth: d.getDate() };
   });
   const todayKey = toDateKey(today);
-  const weekHeaderLabel = `${weekStart.getFullYear()}년 ${weekStart.getMonth() + 1}월`;
+  const [selectedYear, selectedMonth, selectedDay] = selectedDate.split('-').map(Number);
+  const weekHeaderLabel = `${selectedYear}년 ${selectedMonth}월 ${selectedDay}일`;
 
   // ---------- 할 일 리스트 제목 ----------
-  const [, selectedMonth, selectedDay] = selectedDate.split('-').map(Number);
   const listTitle =
-    selectedDate === todayKey ? '오늘 할 일' : `${selectedMonth}월 ${selectedDay}일 할 일`;
+    (selectedDate === todayKey ? '오늘 할 일' : `${selectedMonth}월 ${selectedDay}일 할 일`) +
+    ` ${todos.length}개`;
+
+  // ---------- 생애 첫 완수 별점 피드백 팝업 ----------
+  function closeFirstFeedbackPopup() {
+    setShowFirstDonePopup(false);
+    setFeedbackRating(0);
+  }
+
+  function handleFeedbackDismiss() {
+    saveFirstFeedback('dismissed');
+    track(EVENTS.FIRST_FEEDBACK, { rating: 'dismissed' });
+    closeFirstFeedbackPopup();
+  }
+
+  function handleFeedbackSubmit() {
+    if (feedbackRating === 0) return;
+    saveFirstFeedback(feedbackRating);
+    track(EVENTS.FIRST_FEEDBACK, { rating: feedbackRating });
+    closeFirstFeedbackPopup();
+  }
 
   // ---------- 마스코트 말풍선 ----------
   const mascotState = getMascotState(todos);
-  const mascotMessage = mascotMoment ? MASCOT_MOMENT_MESSAGE : MASCOT_STATE_MESSAGES[mascotState];
+  const mascotMessage =
+    mascotMoment ??
+    (mascotState === MASCOT_STATE.IN_PROGRESS ? inProgressMessage : MASCOT_STATE_MESSAGES[mascotState]);
 
   return (
     <div className="mx-auto min-h-screen w-full max-w-[480px] bg-bg-default">
@@ -353,7 +410,7 @@ export default function HomePage() {
         </section>
 
         {/* 할 일 리스트 (TodoList) */}
-        <section className="px-20px pt-8px">
+        <section className="px-20px pt-20px">
           <h2 className="pb-24px text-17 font-medium text-text-secondary">{listTitle}</h2>
           {todos.length === 0 ? (
             <p className="py-48px text-center text-15 font-normal text-text-dim">
@@ -411,42 +468,48 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* 생애 첫 할 일 완수 팝업 — 바텀 시트 */}
+      {/* 생애 첫 할 일 완수 팝업 — 별점 피드백, 바텀 시트 */}
       {showFirstDonePopup && (
         <div className="fixed inset-0 z-40">
           <button
             type="button"
             aria-label="닫기"
-            onClick={() => setShowFirstDonePopup(false)}
+            onClick={handleFeedbackDismiss}
             className="absolute inset-0 cursor-default"
             style={{ background: 'rgba(25, 31, 40, 0.4)' }}
           />
           <div className="absolute inset-x-0 bottom-0 mx-auto w-full max-w-[480px] rounded-t-16 bg-bg-default p-20px pb-32px shadow-[0_8px_24px_rgba(25,31,40,0.08)]">
-            <h2 className="pb-4px text-17 font-semibold text-text-primary">첫 할 일을 해냈어요!</h2>
-            <p className="pb-20px text-15 font-normal text-text-secondary">
-              이 기능이 일을 시작하는 데 도움이 됐나요?
-            </p>
-            <div className="flex gap-8px">
-              <Button
-                className="flex-1"
-                onClick={() => {
-                  track(EVENTS.FEEDBACK_RESPONDED, { helpful: true });
-                  setShowFirstDonePopup(false);
-                }}
+            <div className="flex items-start justify-between pb-4px">
+              <h2 className="text-17 font-semibold text-text-primary">첫 할 일을 해냈어요!</h2>
+              <button
+                type="button"
+                aria-label="닫기"
+                onClick={handleFeedbackDismiss}
+                className="flex h-32px w-32px shrink-0 items-center justify-center rounded-8 text-text-dim transition duration-[96ms] ease-out active:scale-[0.98]"
               >
-                도움됐어요
-              </Button>
-              <Button
-                variant="secondary"
-                className="flex-1"
-                onClick={() => {
-                  track(EVENTS.FEEDBACK_RESPONDED, { helpful: false });
-                  setShowFirstDonePopup(false);
-                }}
-              >
-                도움이 안 됐어요
-              </Button>
+                <CloseIcon />
+              </button>
             </div>
+            <p className="pb-16px text-15 font-normal text-text-secondary">
+              할 일을 시작하는 데 도움이 됐나요?
+            </p>
+            <div className="flex justify-center gap-8px pb-20px">
+              {[1, 2, 3, 4, 5].map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  aria-label={`${n}점`}
+                  aria-pressed={n <= feedbackRating}
+                  onClick={() => setFeedbackRating(n)}
+                  className="flex h-32px w-32px items-center justify-center transition duration-[96ms] ease-out active:scale-[0.98]"
+                >
+                  <StarIcon filled={n <= feedbackRating} />
+                </button>
+              ))}
+            </div>
+            <Button className="w-full" disabled={feedbackRating === 0} onClick={handleFeedbackSubmit}>
+              알려주기
+            </Button>
           </div>
         </div>
       )}
@@ -479,6 +542,38 @@ export default function HomePage() {
 // ---------- 화면 내 공통 조각 (컴포넌트 추출 아님 — 화면 파일 내부 헬퍼) ----------
 
 // ---------- 아이콘 (플랫 벡터, currentColor) ----------
+
+function StarIcon({ filled }) {
+  return (
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill={filled ? 'currentColor' : 'none'}
+      className={filled ? 'text-brand-primary' : 'text-border-strong'}
+    >
+      <path
+        d="M12 3.5L14.8 9.2L21 10.1L16.5 14.5L17.6 20.7L12 17.7L6.4 20.7L7.5 14.5L3 10.1L9.2 9.2L12 3.5Z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function CloseIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+      <path
+        d="M6 6L18 18M18 6L6 18"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
 
 function HomeIcon() {
   return (

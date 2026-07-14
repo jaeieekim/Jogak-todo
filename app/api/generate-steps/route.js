@@ -56,7 +56,8 @@ async function callClaude(todoText, strategyCandidates) {
     {
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 500,
-      system: MINI_STEP_SYSTEM_PROMPT,
+      // 시스템 프롬프트는 매 요청 동일 — 프롬프트 캐싱으로 반복 호출 시 재처리 생략(지연 단축)
+      system: [{ type: 'text', text: MINI_STEP_SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }],
       messages: [{ role: 'user', content: buildUserMessage(todoText, strategyCandidates) }],
     },
     { timeout: REQUEST_TIMEOUT_MS },
