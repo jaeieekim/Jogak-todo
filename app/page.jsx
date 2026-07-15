@@ -420,7 +420,7 @@ export default function HomePage() {
         {/* 헤더 */}
         <header className="px-20px pt-24px pb-8px">
           <h1 className="text-20 font-semibold text-text-primary">조각투두</h1>
-          <p className="text-14 font-normal text-text-muted">일을 미루는 사람을 위한 투두</p>
+          <p className="text-14 font-normal text-text-muted">쪼개서 쉽게 시작하는 투두리스트</p>
         </header>
 
         {/* 주간 내비게이션 (WeekStrip) */}
