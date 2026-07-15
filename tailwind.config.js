@@ -77,6 +77,21 @@ module.exports = {
       letterSpacing: {
         default: 'var(--letter-spacing-default)',
       },
+      // 로딩 모션 — playful-todolist-ko.md 섹션 7-1 참조
+      keyframes: {
+        'mascot-jump': {
+          '0%, 60%, 100%': { transform: 'translateY(0)' },
+          '30%': { transform: 'translateY(-12px)' }, // spacing/12 값과 정렬
+        },
+        'loader-pulse': {
+          '0%, 100%': { opacity: '0.3' },
+          '50%': { opacity: '1' },
+        },
+      },
+      animation: {
+        'mascot-jump': 'mascot-jump 700ms ease-in-out infinite',
+        'loader-pulse': 'loader-pulse 900ms ease-in-out infinite',
+      },
     },
   },
   plugins: [],

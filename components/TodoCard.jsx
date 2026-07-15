@@ -12,6 +12,7 @@ export default function TodoCard({
   onStartEdit,
   onFinishEdit,
   onEditStepText,
+  onEditOriginalText,
   onResplit,
   onDelete,
   onToggleStep,
@@ -19,6 +20,7 @@ export default function TodoCard({
   isCollapsed,
   isComplete,
   onToggleCollapse,
+  isResplitting,
   draggable,
   onDragStart,
   onDragOver,
@@ -27,6 +29,9 @@ export default function TodoCard({
   const checkedSteps = todo.steps.filter((s) => s.checked).length;
   const totalItems = todo.steps.length + 1;
   const checkedItems = checkedSteps + (todo.originalChecked ? 1 : 0);
+  const isOriginalTextBlank = todo.text.trim() === '';
+  // 재생성 중에는 축소 상태여도 카드를 펼친 모습(보더·화이트)으로 유지하고 인라인 로더를 보여준다
+  const showChecklistArea = !isCollapsed || isResplitting;
 
   return (
     <li
@@ -34,8 +39,8 @@ export default function TodoCard({
       onDragStart={onDragStart}
       onDragOver={onDragOver}
       onDrop={onDrop}
-      className={`rounded-12 px-24px py-20px transition duration-[96ms] ease-out ${
-        isCollapsed
+      className={`rounded-16 px-24px py-20px transition duration-[96ms] ease-out ${
+        isCollapsed && !isResplitting
           ? 'bg-bg-tint'
           : 'border border-border bg-bg-default shadow-[0_1px_3px_rgba(25,31,40,0.04)] hover:border-border-strong'
       }`}
@@ -98,8 +103,16 @@ export default function TodoCard({
         </div>
       </div>
 
+      {/* 재생성 중 — 체크리스트 자리에 인라인 로더(작은 피드백). md 7-1 참조 */}
+      {isResplitting && (
+        <div className="flex items-center justify-center gap-8px pt-20px">
+          <ResplitLoader />
+          <span className="text-14 font-normal text-text-dim">쪼개는 중이에요</span>
+        </div>
+      )}
+
       {/* 체크리스트 — 헤더와 같은 카드 안, 테두리·구분선 없이 표시. 전체 완료 시 축소되어 숨김 */}
-      {!isCollapsed && (
+      {showChecklistArea && !isResplitting && (
         <>
           <ul className="flex flex-col gap-4px pt-20px">
             {todo.steps.map((step) => (
@@ -111,7 +124,7 @@ export default function TodoCard({
                     maxLength={40}
                     autoFocus={step.text === ''}
                     onChange={(e) => onEditStepText(todo.id, step.id, e.target.value)}
-                    className="min-w-0 flex-1 rounded-8 bg-bg-surface px-12px py-8px text-15 font-normal text-text-primary outline-none focus:ring-2 focus:ring-brand-primary"
+                    className="min-w-0 flex-1 rounded-8 bg-bg-surface px-12px py-8px text-17 font-normal text-text-primary outline-none focus:ring-2 focus:ring-brand-primary"
                   />
                 ) : (
                   <span
@@ -132,14 +145,29 @@ export default function TodoCard({
                 />
               </li>
             ))}
-            {/* 원본 할 일 — 항상 맨 아래, 시간 표기 없음 */}
+            {/* 원본 할 일 — 항상 맨 아래, 실제 시간 표기는 없음(더미 뱃지는 invisible). 편집 모드에서 텍스트 수정 가능(헤더와 같은 데이터라 자동 동기화).
+                미니스텝 행과 동일하게 항상 세로 중앙 정렬 — 2줄일 때 상단 고정하던 예외는 제거함(실사용상 드묾) */}
             <li className="flex items-center gap-12px">
-              <span
-                className={`min-w-0 flex-1 text-15 font-normal ${
-                  todo.originalChecked ? 'text-text-dim' : 'text-text-secondary'
-                }`}
-              >
-                {todo.text}
+              {isEditing ? (
+                <input
+                  type="text"
+                  value={todo.text}
+                  maxLength={50}
+                  onChange={(e) => onEditOriginalText(todo.id, e.target.value)}
+                  className="min-w-0 flex-1 rounded-8 bg-bg-surface px-12px py-8px text-17 font-normal text-text-primary outline-none focus:ring-2 focus:ring-brand-primary"
+                />
+              ) : (
+                <span
+                  className={`min-w-0 flex-1 text-15 font-normal ${
+                    todo.originalChecked ? 'text-text-dim' : 'text-text-secondary'
+                  }`}
+                >
+                  {todo.text}
+                </span>
+              )}
+              {/* 원본 할일 행은 시간 뱃지를 invisible로 유지해 행 구조를 통일함 (경계 착시 방지) */}
+              <span className="invisible shrink-0 text-12 font-normal tabular-nums text-text-dim" aria-hidden="true">
+                0분
               </span>
               <Checkbox
                 checked={todo.originalChecked}
@@ -150,7 +178,15 @@ export default function TodoCard({
           </ul>
           {isEditing && (
             <div className="pt-16px">
-              <Button variant="secondary" className="w-full" onClick={() => onFinishEdit(todo.id)}>
+              {isOriginalTextBlank && (
+                <p className="pb-8px text-12 font-normal text-status-warning">할 일 내용을 적어주세요</p>
+              )}
+              <Button
+                variant="secondary"
+                className="w-full"
+                disabled={isOriginalTextBlank}
+                onClick={() => onFinishEdit(todo.id)}
+              >
                 편집 끝내기
               </Button>
             </div>
@@ -162,6 +198,21 @@ export default function TodoCard({
 }
 
 // ---------- TodoCard 전용 조각 ----------
+
+// 재생성 인라인 로더 — 진행 도트와 같은 6px brand 원 3개가 순차 펄스 (md 7-1)
+function ResplitLoader() {
+  return (
+    <span className="flex items-center gap-4px" role="status" aria-label="쪼개는 중이에요">
+      {[0, 1, 2].map((i) => (
+        <span
+          key={i}
+          className="h-[6px] w-[6px] rounded-full bg-brand-primary animate-loader-pulse"
+          style={{ animationDelay: `${i * 150}ms` }}
+        />
+      ))}
+    </span>
+  );
+}
 
 function ProgressDots({ filled, total }) {
   return (
@@ -229,9 +280,9 @@ function CheckIcon() {
 function DotsIcon() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-      <circle cx="5" cy="12" r="1.8" />
+      <circle cx="12" cy="5" r="1.8" />
       <circle cx="12" cy="12" r="1.8" />
-      <circle cx="19" cy="12" r="1.8" />
+      <circle cx="12" cy="19" r="1.8" />
     </svg>
   );
 }

@@ -52,6 +52,20 @@ function isTodoComplete(todo) {
   return todo.steps.every((s) => s.checked) && todo.originalChecked;
 }
 
+// 로딩 연출 최소 노출 시간 — 생성이 순식간에 끝나도 연출이 인지되도록 보장 (md 섹션 7-1).
+// 생성 결과 내용에는 영향을 주지 않고 성공 노출 시점만 지연한다.
+const MIN_LOADING_MS = 700;
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// 생애 첫 완수 별점 피드백 라벨 (PRD 6-3, 라이팅 톤 — 실패·부정 어휘 없음)
+const RATING_LABELS = {
+  1: '잘 모르겠어요',
+  2: '조금 아쉬워요',
+  3: '나쁘지 않아요',
+  4: '약간 도움됐어요',
+  5: '많이 도움됐어요!',
+};
+
 export default function HomePage() {
   const today = useRef(new Date()).current;
 
@@ -76,6 +90,11 @@ export default function HomePage() {
   // 진행 중 상시 상태 문구 — ② 미니스텝 체크 시 순간 반응과 동일 시점에 함께 로테이션
   const [inProgressMessage, setInProgressMessage] = useState(() => pickInProgressMessage(null));
   const lastInProgressMessage = useRef(inProgressMessage);
+  const [showInputInfoTooltip, setShowInputInfoTooltip] = useState(false);
+  // 편집 시작 시점의 원본 할일 텍스트 스냅샷 — 편집 끝내기 시 실제 변경 여부 비교용
+  const editOriginalTextSnapshot = useRef(null);
+  const [resplitAlertTodoId, setResplitAlertTodoId] = useState(null);
+  const [resplittingId, setResplittingId] = useState(null); // 재생성 중인 카드 id — 인라인 로더 표시용
 
   // ---------- 저장/로드 ----------
   useEffect(() => {
@@ -129,7 +148,9 @@ export default function HomePage() {
     let result;
     try {
       const candidates = sampleStrategies(3);
-      result = await generateSteps(text, candidates);
+      // 최소 로딩 시간 보장 — 캐릭터 점프 연출이 최소 1사이클은 보이도록 (md 7-1)
+      const [generated] = await Promise.all([generateSteps(text, candidates), sleep(MIN_LOADING_MS)]);
+      result = generated;
     } catch (err) {
       setGenerating(false);
       showToast(err instanceof GenerateStepsError ? err.message : '잠깐 삐끗했어요. 한 번만 다시 눌러줄래요?');
@@ -240,6 +261,7 @@ export default function HomePage() {
     setEditModeId(todoId);
     const todo = todos.find((t) => t.id === todoId);
     if (!todo) return;
+    editOriginalTextSnapshot.current = todo.text;
     const checkedItems = todo.steps.filter((s) => s.checked).length + (todo.originalChecked ? 1 : 0);
     const totalItems = todo.steps.length + 1;
     if (checkedItems === totalItems) {
@@ -258,17 +280,24 @@ export default function HomePage() {
     const todo = todos.find((t) => t.id === todoId);
     if (!todo) return;
     setMenuOpenId(null);
-    showToast('잘게 쪼개는 중이에요');
+    setResplittingId(todoId); // 해당 카드에 인라인 로더 표시 (작은 피드백)
 
     let result;
     try {
       // 직전에 사용한 전략은 재샘플링 후보에서 제외 (PRD 7번·7-1번)
       const candidates = sampleStrategies(3, todo.lastStrategy);
-      result = await generateSteps(todo.text, candidates);
+      // 최소 로딩 시간 보장 — 인라인 로더 연출이 최소한 인지되도록 (md 7-1)
+      const [generated] = await Promise.all([
+        generateSteps(todo.text, candidates),
+        sleep(MIN_LOADING_MS),
+      ]);
+      result = generated;
     } catch (err) {
+      setResplittingId(null);
       showToast(err instanceof GenerateStepsError ? err.message : '잠깐 삐끗했어요. 한 번만 다시 눌러줄래요?');
       return;
     }
+    setResplittingId(null);
 
     // 원본 할 일과 그 체크 상태는 유지, 미니스텝만 교체
     applyTodoUpdate(todoId, (t) => ({
@@ -294,14 +323,41 @@ export default function HomePage() {
     }));
   }
 
+  // 헤더(할일명)와 체크리스트 맨 아래 원본 할일 항목이 같은 todo.text를 참조하므로 하나만 갱신하면 함께 바뀜
+  function editOriginalText(todoId, text) {
+    applyTodoUpdate(todoId, (todo) => ({ ...todo, text }));
+  }
+
   function finishEdit(todoId) {
-    // 빈 스텝은 정리
-    applyTodoUpdate(todoId, (todo) => ({
-      ...todo,
-      steps: todo.steps.filter((s) => s.text.trim() !== ''),
+    const todo = todos.find((t) => t.id === todoId);
+    if (!todo) return;
+    const trimmedText = todo.text.trim();
+    if (trimmedText === '') return; // 공백만 남으면 저장 차단(버튼도 비활성화되어 정상 흐름에선 도달하지 않음)
+
+    const textChanged = trimmedText !== editOriginalTextSnapshot.current;
+
+    applyTodoUpdate(todoId, (t) => ({
+      ...t,
+      text: trimmedText,
+      steps: t.steps.filter((s) => s.text.trim() !== ''), // 빈 스텝은 정리
     }));
     setEditModeId(null);
     track(EVENTS.STEP_EDITED, { todoId });
+
+    // 원본 할일 텍스트가 실제로 바뀐 경우에만 미니스텝 처리 얼럿 노출
+    if (textChanged) {
+      setResplitAlertTodoId(todoId);
+    }
+  }
+
+  function handleResplitAlertResplit() {
+    const todoId = resplitAlertTodoId;
+    setResplitAlertTodoId(null);
+    if (todoId) resplitTodo(todoId);
+  }
+
+  function handleResplitAlertKeepText() {
+    setResplitAlertTodoId(null);
   }
 
   // ---------- 드래그 정렬 ----------
@@ -352,9 +408,11 @@ export default function HomePage() {
 
   // ---------- 마스코트 말풍선 ----------
   const mascotState = getMascotState(todos);
-  const mascotMessage =
-    mascotMoment ??
-    (mascotState === MASCOT_STATE.IN_PROGRESS ? inProgressMessage : MASCOT_STATE_MESSAGES[mascotState]);
+  // 신규 등록 생성 중에는 로딩 문구가 최우선 (완료되면 generating=false → 순간 반응 ①로 전환)
+  const mascotMessage = generating
+    ? '할일을 쪼개고 있어요'
+    : (mascotMoment ??
+      (mascotState === MASCOT_STATE.IN_PROGRESS ? inProgressMessage : MASCOT_STATE_MESSAGES[mascotState]));
 
   return (
     <div className="mx-auto min-h-screen w-full max-w-[480px] bg-bg-default">
@@ -380,12 +438,12 @@ export default function HomePage() {
         <div className="flex flex-col items-center gap-12px py-8px">
           <MascotSpeechBubble message={mascotMessage} />
           <Image
-            src="/mascot-star.png"
+            src="/mascot-starcandy.png"
             alt="조각투두 마스코트"
             width={120}
             height={120}
             priority
-            className="h-[120px] w-[120px]"
+            className={`h-[120px] w-[120px] ${generating ? 'animate-mascot-jump' : ''}`}
           />
         </div>
 
@@ -397,26 +455,51 @@ export default function HomePage() {
               value={inputText}
               maxLength={50}
               onChange={(e) => setInputText(e.target.value)}
-              placeholder="시작해야 하는 일 하나만 적어봐요"
-              className="min-w-0 flex-1 rounded-12 bg-bg-surface px-20px py-16px text-15 font-normal text-text-primary outline-none placeholder:text-text-dim focus:ring-2 focus:ring-brand-primary"
+              placeholder="예: 가계부 작성, 운동 가기, 영어 공부 …"
+              className="min-w-0 flex-1 rounded-12 bg-bg-surface px-20px py-16px text-17 font-normal text-text-primary outline-none placeholder:text-text-dim focus:ring-2 focus:ring-brand-primary"
             />
             <Button type="submit" disabled={!inputText.trim() || generating} className="shrink-0 px-20px">
-              {generating ? '잘게 쪼개는 중이에요' : '할일 등록'}
+              {generating ? '쪼개는 중이에요' : '할일 등록'}
             </Button>
           </form>
-          <p className="px-4px pt-8px text-12 font-normal text-text-dim">
-            할일을 쉽게 시작할 수 있도록 작게 조각내어 드릴게요
-          </p>
+          <div className="relative flex items-center gap-4px px-4px pt-8px">
+            <p className="text-12 font-normal text-text-dim">
+              할일을 쉽게 시작할 수 있도록 작게 조각내어 드릴게요
+            </p>
+            <button
+              type="button"
+              aria-label="입력 안내"
+              onClick={() => setShowInputInfoTooltip((v) => !v)}
+              className="flex h-16px w-16px shrink-0 items-center justify-center text-status-info"
+            >
+              <InfoIcon filled />
+            </button>
+            {showInputInfoTooltip && (
+              <div className="absolute left-4px top-full z-10 mt-4px flex w-full max-w-[320px] items-start gap-4px rounded-12 bg-bg-tint px-16px py-12px shadow-[0_8px_24px_rgba(25,31,40,0.08)]">
+                <span
+                  className="text-12 font-normal text-text-secondary"
+                  style={{ lineHeight: 'var(--line-height-heading)' }}
+                >
+                  할 일을 적을 때, '네일'보다 '네일 받기'처럼 적으면
+                  <br />더 정확하게 할 일을 쪼갤 수 있어요.
+                </span>
+                <button
+                  type="button"
+                  aria-label="닫기"
+                  onClick={() => setShowInputInfoTooltip(false)}
+                  className="flex h-16px w-16px shrink-0 items-center justify-center text-text-dim"
+                >
+                  <CloseIcon size={14} />
+                </button>
+              </div>
+            )}
+          </div>
         </section>
 
         {/* 할 일 리스트 (TodoList) */}
         <section className="px-20px pt-20px">
           <h2 className="pb-24px text-17 font-medium text-text-secondary">{listTitle}</h2>
-          {todos.length === 0 ? (
-            <p className="py-48px text-center text-15 font-normal text-text-dim">
-              부담 없이, 하나면 돼요
-            </p>
-          ) : (
+          {todos.length === 0 ? null : (
             <ul className="flex flex-col gap-12px">
               {todos.map((todo) => {
                 const checkedItems =
@@ -437,7 +520,9 @@ export default function HomePage() {
                     onStartEdit={startEdit}
                     onFinishEdit={finishEdit}
                     onEditStepText={editStepText}
+                    onEditOriginalText={editOriginalText}
                     onResplit={resplitTodo}
+                    isResplitting={resplittingId === todo.id}
                     onDelete={deleteTodo}
                     onToggleStep={toggleStep}
                     onToggleOriginal={toggleOriginal}
@@ -462,7 +547,7 @@ export default function HomePage() {
           className="fixed inset-x-0 z-30 mx-auto w-full max-w-[480px] px-20px"
           style={{ bottom: 'calc(56px + var(--spacing-16))' }}
         >
-          <div className="w-full rounded-12 bg-bg-inverse px-20px py-16px text-center text-15 font-medium text-text-on-inverse shadow-[0_8px_24px_rgba(25,31,40,0.08)]">
+          <div className="w-full rounded-12 bg-bg-inverse px-20px py-20px text-center text-15 font-medium text-text-on-inverse shadow-[0_8px_24px_rgba(25,31,40,0.08)]">
             {toast}
           </div>
         </div>
@@ -490,26 +575,54 @@ export default function HomePage() {
                 <CloseIcon />
               </button>
             </div>
-            <p className="pb-16px text-15 font-normal text-text-secondary">
+            <p className="pb-24px text-15 font-normal text-text-secondary">
               할 일을 시작하는 데 도움이 됐나요?
             </p>
-            <div className="flex justify-center gap-8px pb-20px">
-              {[1, 2, 3, 4, 5].map((n) => (
-                <button
-                  key={n}
-                  type="button"
-                  aria-label={`${n}점`}
-                  aria-pressed={n <= feedbackRating}
-                  onClick={() => setFeedbackRating(n)}
-                  className="flex h-32px w-32px items-center justify-center transition duration-[96ms] ease-out active:scale-[0.98]"
-                >
-                  <StarIcon filled={n <= feedbackRating} />
-                </button>
-              ))}
+            <div className="flex flex-col items-center gap-8px pb-32px">
+              <div className="flex justify-center gap-8px">
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <button
+                    key={n}
+                    type="button"
+                    aria-label={`${n}점`}
+                    aria-pressed={n <= feedbackRating}
+                    onClick={() => setFeedbackRating(n)}
+                    className="flex h-48px w-48px items-center justify-center transition duration-[96ms] ease-out active:scale-[0.98]"
+                  >
+                    <StarIcon filled={n <= feedbackRating} size={40} />
+                  </button>
+                ))}
+              </div>
+              {/* 라벨 — 선택 전에도 고정 높이로 자리 확보(레이아웃 흔들림 방지) */}
+              <div className="flex h-24px items-center justify-center">
+                <span className="text-15 font-normal text-text-secondary">
+                  {feedbackRating ? RATING_LABELS[feedbackRating] : ''}
+                </span>
+              </div>
             </div>
             <Button className="w-full" disabled={feedbackRating === 0} onClick={handleFeedbackSubmit}>
               알려주기
             </Button>
+          </div>
+        </div>
+      )}
+
+      {/* 원본 할일 텍스트 수정 후 미니스텝 처리 얼럿 — X/백드롭 닫기 없음, 두 버튼 중 선택 강제 */}
+      {resplitAlertTodoId && (
+        <div className="fixed inset-0 z-40">
+          <div className="absolute inset-0" style={{ background: 'rgba(25, 31, 40, 0.4)' }} />
+          <div className="absolute inset-x-0 bottom-0 mx-auto w-full max-w-[480px] rounded-t-16 bg-bg-default p-20px pb-32px shadow-[0_8px_24px_rgba(25,31,40,0.08)]">
+            <h2 className="pb-4px text-17 font-semibold text-text-primary">
+              할 일이 바뀌었어요. 미니스텝은 어떻게 할까요?
+            </h2>
+            <div className="flex flex-col gap-8px pt-16px">
+              <Button className="w-full" onClick={handleResplitAlertKeepText}>
+                텍스트만 수정
+              </Button>
+              <Button variant="secondary" className="w-full" onClick={handleResplitAlertResplit}>
+                다시 쪼개기
+              </Button>
+            </div>
           </div>
         </div>
       )}
@@ -526,8 +639,8 @@ export default function HomePage() {
           </button>
           <button
             type="button"
-            disabled
             aria-label="기록·리포트 보관소 (준비 중)"
+            onClick={() => showToast('보관소 기능이 열릴 예정이에요. 곧 만나요!')}
             className="flex flex-1 flex-col items-center justify-center gap-4px text-text-dim"
           >
             <LockIcon />
@@ -543,11 +656,11 @@ export default function HomePage() {
 
 // ---------- 아이콘 (플랫 벡터, currentColor) ----------
 
-function StarIcon({ filled }) {
+function StarIcon({ filled, size = 24 }) {
   return (
     <svg
-      width="24"
-      height="24"
+      width={size}
+      height={size}
       viewBox="0 0 24 24"
       fill={filled ? 'currentColor' : 'none'}
       className={filled ? 'text-brand-primary' : 'text-border-strong'}
@@ -562,15 +675,44 @@ function StarIcon({ filled }) {
   );
 }
 
-function CloseIcon() {
+function CloseIcon({ size = 18 }) {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       <path
         d="M6 6L18 18M18 6L6 18"
         stroke="currentColor"
         strokeWidth="2"
         strokeLinecap="round"
       />
+    </svg>
+  );
+}
+
+function InfoIcon({ filled = false }) {
+  if (filled) {
+    return (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="12" r="10" fill="currentColor" />
+        <path
+          d="M12 11V17"
+          stroke="var(--color-bg-default)"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
+        <circle cx="12" cy="7.5" r="1.25" fill="var(--color-bg-default)" />
+      </svg>
+    );
+  }
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
+      <path
+        d="M12 11V17"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+      <circle cx="12" cy="7.5" r="1.25" fill="currentColor" />
     </svg>
   );
 }

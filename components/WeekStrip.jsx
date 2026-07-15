@@ -1,5 +1,6 @@
 // 주간 내비게이션. 날짜 사이 간격은 grid + 명시적 spacing/8 토큰 사용
 // (기존엔 justify-between 자동 분배라 토큰이 없었음).
+// 상단 화살표-날짜 행도 동일한 이유로 justify-between → justify-center + 명시적 spacing/24로 전환.
 
 const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토'];
 
@@ -14,7 +15,7 @@ export default function WeekStrip({
 }) {
   return (
     <section className="px-20px py-12px">
-      <div className="flex items-center justify-between pb-8px">
+      <div className="flex items-center justify-center gap-24px pb-8px">
         <button
           type="button"
           aria-label="이전 주"
