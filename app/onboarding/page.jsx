@@ -309,12 +309,12 @@ export default function OnboardingPage() {
         </div>
 
         {/* 쪼개기 시연 애니메이션 — 1회 재생 후 최종 3장 상태로 정지 (md 7-2) */}
-        <div className="pt-64px">
+        <div className="pt-48px">
           <SplitDemo />
         </div>
 
         {/* 중단: 핵심 포인트 3개 (포인트 간 spacing/4) */}
-        <ul className="flex flex-col gap-4px pt-64px">
+        <ul className="flex flex-col gap-4px pt-48px">
           {POINTS.map((p) => (
             <li key={p.title} className="flex items-center gap-12px">
               {/* 아이콘 배경 박스 — 페이지 배경(bg/alt)과 동일 색으로 눈에 안 띄게, 스트로크 없음 */}
