@@ -44,6 +44,7 @@ export const theme = {
     24: 'var(--spacing-24)',
     32: 'var(--spacing-32)',
     48: 'var(--spacing-48)',
+    64: 'var(--spacing-64)',
   },
   radius: {
     4: 'var(--radius-4)',

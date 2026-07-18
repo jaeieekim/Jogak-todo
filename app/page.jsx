@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import TodoCard from '../components/TodoCard';
 import Button from '../components/Button';
@@ -24,6 +25,7 @@ import {
   wasFirstDonePopupShown,
   markFirstDonePopupShown,
   saveFirstFeedback,
+  wasOnboardingSeen,
 } from '../lib/storage';
 
 // ---------- 날짜 유틸 ----------
@@ -67,6 +69,7 @@ const RATING_LABELS = {
 };
 
 export default function HomePage() {
+  const router = useRouter();
   const today = useRef(new Date()).current;
 
   const [todosByDate, setTodosByDate] = useState({});
@@ -95,6 +98,13 @@ export default function HomePage() {
   const editOriginalTextSnapshot = useRef(null);
   const [resplitAlertTodoId, setResplitAlertTodoId] = useState(null);
   const [resplittingId, setResplittingId] = useState(null); // 재생성 중인 카드 id — 인라인 로더 표시용
+
+  // ---------- 첫 방문 온보딩 게이트 ----------
+  useEffect(() => {
+    if (!wasOnboardingSeen()) {
+      router.replace('/onboarding');
+    }
+  }, [router]);
 
   // ---------- 저장/로드 ----------
   useEffect(() => {

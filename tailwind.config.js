@@ -49,6 +49,7 @@ module.exports = {
         '24px': 'var(--spacing-24)',
         '32px': 'var(--spacing-32)',
         '48px': 'var(--spacing-48)',
+        '64px': 'var(--spacing-64)',
       },
       borderRadius: {
         4: 'var(--radius-4)',
@@ -87,10 +88,23 @@ module.exports = {
           '0%, 100%': { opacity: '0.3' },
           '50%': { opacity: '1' },
         },
+        // 온보딩 쪼개기 시연 파티클 — 이동량은 CSS 변수(--demo-dx/--demo-dy)로 주입 (md 7-2)
+        'demo-particle': {
+          '0%': { opacity: '1', transform: 'translate(0, 0) rotate(0deg)' },
+          '100%': { opacity: '0', transform: 'translate(var(--demo-dx), var(--demo-dy)) rotate(45deg)' },
+        },
+        // 온보딩 시연 순차 체크 — 체크마크 살짝 통통한 scale-in (md 7-2)
+        'demo-check-pop': {
+          '0%': { transform: 'scale(0)' },
+          '70%': { transform: 'scale(1.15)' },
+          '100%': { transform: 'scale(1)' },
+        },
       },
       animation: {
         'mascot-jump': 'mascot-jump 700ms ease-in-out infinite',
         'loader-pulse': 'loader-pulse 900ms ease-in-out infinite',
+        'demo-particle': 'demo-particle 600ms ease-out forwards',
+        'demo-check-pop': 'demo-check-pop 180ms ease-out forwards',
       },
     },
   },
