@@ -297,7 +297,7 @@ export default function OnboardingPage() {
   };
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-[480px] flex-col bg-bg-alt px-20px pt-64px pb-64px">
+    <div className="mx-auto flex min-h-screen w-full max-w-[480px] flex-col bg-bg-alt px-20px pt-32px pb-64px">
       {/* 상단 + 중단 */}
       <div className="flex-1">
         {/* 상단: 서비스명 + 설명 (중앙정렬, 사이 spacing/12) */}
@@ -313,10 +313,10 @@ export default function OnboardingPage() {
           <SplitDemo />
         </div>
 
-        {/* 중단: 핵심 포인트 3개 (포인트 간 spacing/24) */}
-        <ul className="flex flex-col gap-8px pt-64px">
+        {/* 중단: 핵심 포인트 3개 (포인트 간 spacing/4) */}
+        <ul className="flex flex-col gap-4px pt-64px">
           {POINTS.map((p) => (
-            <li key={p.title} className="flex items-center gap-16px">
+            <li key={p.title} className="flex items-center gap-12px">
               {/* 아이콘 배경 박스 — 페이지 배경(bg/alt)과 동일 색으로 눈에 안 띄게, 스트로크 없음 */}
               <div
                 className="flex shrink-0 items-center justify-center rounded-12 bg-bg-alt"
