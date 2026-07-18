@@ -11,12 +11,12 @@ import Image from 'next/image';
 import Button from '../../components/Button';
 import { markOnboardingSeen } from '../../lib/storage';
 
-const POINT_ICON_SIZE = 80; // 기본 아이콘 크기(px)
+const POINT_ICON_SIZE = 72; // 기본 아이콘 배경 박스 크기(px)
 
 const POINTS = [
-  { title: '시작이 막막할 때', desc: '3분이면 쉽게 시작', icon: '/icon-lightning.png', rotate: 8, translateX: 4, iconSize: 72 }, // 오른쪽으로 아주 살짝 회전 + 4px 이동, 크기 아주 살짝 축소
-  { title: '완벽하지 않아도', desc: '다 못 해도, 시작이 반', icon: '/icon-puzzle.png', iconSize: 60 }, // 다른 아이콘보다 살짝 작게
-  { title: '부담 없이', desc: '작은 할 일부터 조금씩', icon: '/icon-feather.png' },
+  { title: '시작이 막막할 때', desc: '3분이면 쉽게 시작', icon: '/icon-lightning.png', rotate: 8, translateX: 4, iconSize: 68 }, // 오른쪽으로 아주 살짝 회전 + 4px 이동, 크기 아주 살짝 축소
+  { title: '완벽하지 않아도', desc: '다 못 해도, 시작이 반', icon: '/icon-puzzle.png', iconSize: 56 }, // 다른 아이콘보다 살짝 작게
+  { title: '부담 없이', desc: '작은 할 일부터 조금씩', icon: '/icon-feather.png', iconSize: 72 }, // 기본 박스 크기와 동일하게 아주 살짝 축소
 ];
 
 // ── 쪼개기 시연 애니메이션 (design-system md 7-2) ──────────────────────────
@@ -298,8 +298,8 @@ export default function OnboardingPage() {
 
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-[480px] flex-col bg-bg-alt px-20px pt-32px pb-64px">
-      {/* 상단 + 중단 */}
-      <div className="flex-1">
+      {/* 상단 + 중단 — 버튼은 하단 고정이 아니라 콘텐츠 흐름을 따르고, 간격은 고정 토큰으로 관리 */}
+      <div>
         {/* 상단: 서비스명 + 설명 (중앙정렬, 사이 spacing/12) */}
         <div className="flex flex-col items-center gap-12px text-center">
           <h1 className="text-32 font-semibold text-text-primary">조각투두</h1>
@@ -320,7 +320,7 @@ export default function OnboardingPage() {
               {/* 아이콘 배경 박스 — 페이지 배경(bg/alt)과 동일 색으로 눈에 안 띄게, 스트로크 없음 */}
               <div
                 className="flex shrink-0 items-center justify-center rounded-12 bg-bg-alt"
-                style={{ width: POINT_ICON_SIZE, height: POINT_ICON_SIZE }}
+                style={{ width: p.boxSize ?? POINT_ICON_SIZE, height: p.boxSize ?? POINT_ICON_SIZE }}
               >
                 {p.icon ? (
                   <Image
@@ -352,8 +352,8 @@ export default function OnboardingPage() {
         </ul>
       </div>
 
-      {/* 하단: 시작하기(primary) */}
-      <div className="pt-32px">
+      {/* 하단: 시작하기(primary) — 포인트 리스트와 spacing/48 고정 간격 (md 콘텐츠 블록 리듬 32–48px) */}
+      <div className="pt-48px">
         <Button className="w-full" onClick={goHome}>
           시작하기
         </Button>
