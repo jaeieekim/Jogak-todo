@@ -302,7 +302,7 @@ export default function OnboardingPage() {
       <div>
         {/* 상단: 서비스명 + 설명 (중앙정렬, 사이 spacing/12) */}
         <div className="flex flex-col items-center gap-12px text-center">
-          <h1 className="text-32 font-semibold text-text-primary">조각투두</h1>
+          <h1 className="text-24 font-semibold text-text-primary">조각투두</h1>
           <p className="text-17 font-normal text-text-secondary">
             할 일을 적으면 시작하기 쉽게 쪼개주는 투두리스트
           </p>
