@@ -77,6 +77,33 @@ export const theme = {
   letterSpacing: {
     default: 'var(--letter-spacing-default)',
   },
+  // 보관소(은하수) 전용 고정 다크 테마 — playful-todolist-ko.md 섹션 12.
+  // app/vault, components/vault 밖에서는 쓰지 않는다. 별자리별 HUE는 여기 없음 (lib/constellationShapes.js 참조).
+  vault: {
+    color: {
+      skyDeep: 'var(--color-vault-sky-deep)',
+      skyMid: 'var(--color-vault-sky-mid)',
+      skyViolet: 'var(--color-vault-sky-violet)',
+      skyGlow: 'var(--color-vault-sky-glow)',
+      foreground: 'var(--color-vault-foreground)',
+      mutedForeground: 'var(--color-vault-muted-foreground)',
+      faint: 'var(--color-vault-faint)',
+      amber: 'var(--color-vault-amber)',
+      amberSoft: 'var(--color-vault-amber-soft)',
+      jellyA: 'var(--color-vault-jelly-a)',
+      jellyB: 'var(--color-vault-jelly-b)',
+      jellyC: 'var(--color-vault-jelly-c)',
+      white: 'var(--color-vault-white)',
+      black: 'var(--color-vault-black)',
+      mascotBg: 'var(--color-vault-mascot-bg)',
+      linkLine: 'var(--color-vault-link-line)',
+    },
+    fontSize: {
+      12: 'var(--font-size-vault-12)',
+      13: 'var(--font-size-vault-13)',
+      26: 'var(--font-size-vault-26)',
+    },
+  },
 };
 
 export default theme;

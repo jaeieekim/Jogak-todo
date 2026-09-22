@@ -316,4 +316,61 @@ Spacing·Radius·Typography는 값 자체가 이름인 원시값 네이밍이라
 | Medium | 500 | 버튼, UI 레이블, 탭 |
 | Regular | 400 | 본문, 보조 텍스트 |
 
+---
+
+## 12. 보관소(은하수) 전용 테마 — 고정 다크 테마
+
+> **보관소 화면(은하수·별자리 상세)은 밤하늘 콘셉트의 고정 테마이고, 시스템 다크모드 대응이 아니다.**
+> 즉 `prefers-color-scheme`에 반응하지 않고, 라이트 모드 기기에서도 항상 이 어두운 톤으로 보인다. 홈 등 나머지 화면은 지금처럼 라이트 고정이며, 이 절의 토큰은 보관소 화면에서만 쓴다.
+
+**섹션 1~11(Primitive→Semantic 2계층)과는 별도의, 독립된 1계층 토큰 세트다.** Figma 시안(Mobile Dark Theme Galaxy)의 CSS 변수 이름을 그대로 가져와 `--color-vault-*` 접두어만 붙인다 — 값은 시안과 정확히 같고, 반올림하지 않는다.
+
+### Vault Color (Figma 변수 1:1 대응)
+
+| Figma 변수 | 프로젝트 변수 | 값 |
+|---|---|---|
+| `--sky-deep` | `--color-vault-sky-deep` | #070417 |
+| `--sky-mid` | `--color-vault-sky-mid` | #140B34 |
+| `--sky-violet` | `--color-vault-sky-violet` | #241454 |
+| `--sky-glow` | `--color-vault-sky-glow` | #3A2B7A |
+| `--foreground` | `--color-vault-foreground` | #EEF0FF |
+| `--muted-foreground` | `--color-vault-muted-foreground` | #9B93C9 |
+| `--faint` | `--color-vault-faint` | #4A4472 |
+| `--amber` | `--color-vault-amber` | #FFC24D |
+| `--amber-soft` | `--color-vault-amber-soft` | #FFDF9E |
+| `--jelly-a` | `--color-vault-jelly-a` | #B48BFF |
+| `--jelly-b` | `--color-vault-jelly-b` | #6FD6FF |
+| `--jelly-c` | `--color-vault-jelly-c` | #FF9ECB |
+
+**Figma 코드에 변수 없이 반복 등장하는 색(이름이 없어 그대로 옮길 수 없던 것)도 같은 방식으로 등록한다** — 값은 Figma 인라인 rgba에서 그대로 추출:
+
+| 프로젝트 변수 | 값 | 원본(Figma 인라인) |
+|---|---|---|
+| `--color-vault-white` | #FFFFFF | 카드 테두리, 별 점 등 다수 |
+| `--color-vault-black` | #000000 | 그림자, 젤리 눌림 자국 |
+| `--color-vault-mascot-bg` | #1E1442 | `rgba(30,20,66,*)` (마스코트 말풍선 배경) |
+| `--color-vault-link-line` | #BEB6E8 | `rgba(190,182,232,*)` (별자리 간 연결선) |
+
+**투명도가 섞인 색(예: 시안의 `rgba(20,11,52,0.6)` 유리 배경)은 새 토큰을 또 만들지 않고, 위 토큰에 `color-mix()`로 투명도만 얹어 재현한다** — 예: `color-mix(in srgb, var(--color-vault-sky-mid) 60%, transparent)`. 색상값 자체가 항상 토큰에서만 나오므로 컴포넌트 코드에 헥스·rgba 숫자가 직접 박히지 않는다.
+
+**별자리별 발광 색(HUE, 동물마다 다른 13색)은 이 토큰 목록에 넣지 않는다.** 별자리 모양(별 좌표)과 함께 교체될 콘텐츠 데이터라서 `lib/constellationShapes.js`에 좌표와 나란히 둔다 — 디자인 시스템 토큰이 아니라 별자리별 에셋의 일부로 취급.
+
+### Vault Typography
+
+폰트 패밀리는 새로 만들지 않고 기존 `--font-family-base`(Pretendard)를 그대로 쓴다. **사이즈만** 시안 값 그대로 전용 토큰으로 등록한다(기존 10종 사이즈 스케일에 억지로 맞추지 않음):
+
+| 프로젝트 변수 | 값 | 용도 |
+|---|---|---|
+| `--font-size-vault-12` | 12px | 별자리 이름 라벨 |
+| `--font-size-vault-13` | 13px | 보조 문구, 캡션, 칩 텍스트 |
+| `--font-size-vault-26` | 26px | 별자리 상세 제목 |
+
+행간·자간은 보관소 화면에서도 전역 규칙(자간 −1%)을 따른다.
+
+### 적용 범위와 금지사항 예외
+
+- 위 토큰은 `app/vault/**`와 `components/vault/**` 안에서만 쓴다. 다른 화면에서 이 토큰을 쓰지 않는다.
+- 이 화면에 한해 그라디언트·블러·글로우(box-shadow 다중 레이어)를 허용한다. 나머지 화면은 기존 금지 규칙(섹션 8 Don't) 그대로 유지.
+- 별자리 모양 좌표(`lib/constellationShapes.js`)와 별자리 상세의 캐릭터 젤리 이미지(`public/vault/`)는 임시 에셋이며, 각각 그 파일만 바꾸면 교체된다(컴포넌트 로직 수정 불필요).
+
 모든 Text Style의 서체는 Pretendard, 자간 −1% 고정. 사이즈 × 웨이트 조합으로 스타일을 등록한다 (예: `Heading/24-SemiBold`, `Body/17-Regular`, `Label/15-Medium`).

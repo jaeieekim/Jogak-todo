@@ -119,3 +119,71 @@ html {
   font-family: var(--font-family-base);
   letter-spacing: var(--letter-spacing-default);
 }
+
+/* ============================================
+   보관소(은하수) 전용 고정 다크 테마
+   Single Source of Truth: playful-todolist-ko.md 섹션 12
+   — 섹션 1~11(Primitive→Semantic)과 독립된 1계층 토큰. app/vault, components/vault 안에서만 사용.
+   — 시스템 다크모드(prefers-color-scheme)에 반응하지 않는 고정 테마라 :root에 조건 없이 정의한다.
+   ============================================ */
+:root {
+  /* Figma 변수와 1:1 대응 (이름·값 동일, 반올림 없음) */
+  --color-vault-sky-deep: #070417;
+  --color-vault-sky-mid: #140b34;
+  --color-vault-sky-violet: #241454;
+  --color-vault-sky-glow: #3a2b7a;
+  --color-vault-foreground: #eef0ff;
+  --color-vault-muted-foreground: #9b93c9;
+  --color-vault-faint: #4a4472;
+  --color-vault-amber: #ffc24d;
+  --color-vault-amber-soft: #ffdf9e;
+  --color-vault-jelly-a: #b48bff;
+  --color-vault-jelly-b: #6fd6ff;
+  --color-vault-jelly-c: #ff9ecb;
+
+  /* Figma 코드에 변수 없이 인라인으로 반복 등장하는 색 (같은 방식으로 등록) */
+  --color-vault-white: #ffffff;
+  --color-vault-black: #000000;
+  --color-vault-mascot-bg: #1e1442;
+  --color-vault-link-line: #beb6e8;
+
+  /* 사이즈만 전용 등록 (폰트 패밀리는 --font-family-base 그대로) */
+  --font-size-vault-12: 12px;
+  --font-size-vault-13: 13px;
+  --font-size-vault-26: 26px;
+}
+
+/* 보관소 전용 모션 — Figma index.css의 키프레임을 그대로 옮김(vault- 접두어만 추가).
+   인라인 style의 animation 문자열로 참조되므로(개별 별 반짝임처럼 요소마다 딜레이가 달라 Tailwind 유틸로 못 씀),
+   Tailwind 애니메이션 대신 여기 플레인 CSS로 둔다. */
+@keyframes vault-twinkle {
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 1; }
+}
+@keyframes vault-drift {
+  0% { transform: translate(0, 0); }
+  50% { transform: translate(6px, -10px); }
+  100% { transform: translate(0, 0); }
+}
+@keyframes vault-spark {
+  0% { transform: scale(0.2); opacity: 0; }
+  30% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
+@keyframes vault-squish-idle {
+  0%, 100% { transform: scale(1, 1); }
+  50% { transform: scale(1.04, 0.94); }
+}
+@keyframes vault-jelly-punch {
+  0% { transform: scale(1, 1); }
+  16% { transform: scale(0.82, 0.82); }
+  38% { transform: scale(1.1, 1.06); }
+  58% { transform: scale(0.94, 0.96); }
+  78% { transform: scale(1.03, 1.02); }
+  100% { transform: scale(1, 1); }
+}
+@keyframes vault-dent-fade {
+  0% { opacity: 0.55; transform: translate(-50%, -50%) scale(0.5); }
+  30% { opacity: 0.5; transform: translate(-50%, -50%) scale(0.9); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1.5); }
+}

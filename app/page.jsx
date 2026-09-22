@@ -7,6 +7,7 @@ import TodoCard from '../components/TodoCard';
 import Button from '../components/Button';
 import WeekStrip from '../components/WeekStrip';
 import MascotSpeechBubble from '../components/MascotSpeechBubble';
+import BottomNav from '../components/BottomNav';
 import {
   getMascotState,
   MASCOT_STATE,
@@ -19,6 +20,7 @@ import {
 import { generateSteps, GenerateStepsError } from '../lib/generateSteps';
 import { sampleStrategies } from '../lib/prompts/miniStepPrompt';
 import { track, EVENTS } from '../lib/mixpanel';
+import { ensureJellyAccount, earnJelly } from '../lib/jelly';
 import {
   loadTodosByDate,
   saveTodosByDate,
@@ -101,6 +103,7 @@ export default function HomePage() {
 
   // ---------- 첫 방문 온보딩 게이트 ----------
   useEffect(() => {
+    ensureJellyAccount(); // 앱 진입 시 익명 계정 자동 생성 (온보딩 리다이렉트보다 먼저)
     if (!wasOnboardingSeen()) {
       router.replace('/onboarding');
     }
@@ -205,6 +208,14 @@ export default function HomePage() {
     const justChecked = nextCheckedCount > prevCheckedCount;
     const justCompletedTodo = !isTodoComplete(prevTodo) && isTodoComplete(nextTodo);
     const isFirstEverCompletion = justCompletedTodo && !wasFirstDonePopupShown();
+
+    // 젤리 적립 (V1.0): 미니스텝이 새로 체크되면 1조각, 할 일이 완수되면 2조각. 하루 1회 제한·중복 방지는 서버가 처리
+    const newlyCheckedStep = nextTodo.steps.some(
+      (s) => s.checked && !prevTodo.steps.find((p) => p.id === s.id)?.checked,
+    );
+    const jellyDate = toDateKey(new Date());
+    if (newlyCheckedStep) earnJelly('ministep', jellyDate);
+    if (justCompletedTodo) earnJelly('todo', jellyDate);
 
     if (justCompletedTodo) {
       showToast('오늘 몫은 충분해요');
@@ -637,27 +648,7 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* 하단 내비게이션 — 홈 활성 / 보관소 잠금 (V1.3 오픈 예정) */}
-      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-bg-default">
-        <div className="mx-auto flex h-[56px] w-full max-w-[480px]">
-          <button
-            type="button"
-            className="flex flex-1 flex-col items-center justify-center gap-4px text-brand-primary"
-          >
-            <HomeIcon />
-            <span className="text-12 font-medium">홈</span>
-          </button>
-          <button
-            type="button"
-            aria-label="기록·리포트 보관소 (준비 중)"
-            onClick={() => showToast('보관소 기능이 열릴 예정이에요. 곧 만나요!')}
-            className="flex flex-1 flex-col items-center justify-center gap-4px text-text-dim"
-          >
-            <LockIcon />
-            <span className="text-12 font-medium">보관소</span>
-          </button>
-        </div>
-      </nav>
+      <BottomNav active="home" />
     </div>
   );
 }
@@ -727,38 +718,3 @@ function InfoIcon({ filled = false }) {
   );
 }
 
-function HomeIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-      <path
-        d="M4 10.5L12 4L20 10.5V19C20 19.5523 19.5523 20 19 20H5C4.44772 20 4 19.5523 4 19V10.5Z"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function LockIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-      <rect
-        x="5"
-        y="11"
-        width="14"
-        height="9"
-        rx="2"
-        stroke="currentColor"
-        strokeWidth="2"
-      />
-      <path
-        d="M8 11V8C8 5.79086 9.79086 4 12 4C14.2091 4 16 5.79086 16 8V11"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}

@@ -39,6 +39,26 @@ module.exports = {
           danger: 'var(--color-status-danger)',
           info: 'var(--color-status-info)',
         },
+        // 보관소(은하수) 전용 고정 다크 테마 — playful-todolist-ko.md 섹션 12.
+        // 사용: bg-vault-sky-deep, text-vault-foreground 등. app/vault, components/vault 밖에서는 쓰지 않는다.
+        vault: {
+          'sky-deep': 'var(--color-vault-sky-deep)',
+          'sky-mid': 'var(--color-vault-sky-mid)',
+          'sky-violet': 'var(--color-vault-sky-violet)',
+          'sky-glow': 'var(--color-vault-sky-glow)',
+          foreground: 'var(--color-vault-foreground)',
+          'muted-foreground': 'var(--color-vault-muted-foreground)',
+          faint: 'var(--color-vault-faint)',
+          amber: 'var(--color-vault-amber)',
+          'amber-soft': 'var(--color-vault-amber-soft)',
+          'jelly-a': 'var(--color-vault-jelly-a)',
+          'jelly-b': 'var(--color-vault-jelly-b)',
+          'jelly-c': 'var(--color-vault-jelly-c)',
+          white: 'var(--color-vault-white)',
+          black: 'var(--color-vault-black)',
+          'mascot-bg': 'var(--color-vault-mascot-bg)',
+          'link-line': 'var(--color-vault-link-line)',
+        },
       },
       spacing: {
         '4px': 'var(--spacing-4)',
@@ -74,6 +94,10 @@ module.exports = {
         40: ['var(--font-size-40)', { lineHeight: 'var(--line-height-heading)' }],
         50: ['var(--font-size-50)', { lineHeight: 'var(--line-height-heading)' }],
         66: ['var(--font-size-66)', { lineHeight: 'var(--line-height-heading)' }],
+        // 보관소 전용 사이즈 (기존 10종 스케일과 별도, 시안 값 그대로)
+        'vault-12': ['var(--font-size-vault-12)', { lineHeight: 'var(--line-height-body)' }],
+        'vault-13': ['var(--font-size-vault-13)', { lineHeight: 'var(--line-height-body)' }],
+        'vault-26': ['var(--font-size-vault-26)', { lineHeight: 'var(--line-height-heading)' }],
       },
       letterSpacing: {
         default: 'var(--letter-spacing-default)',
