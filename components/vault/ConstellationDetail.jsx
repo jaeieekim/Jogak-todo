@@ -10,7 +10,14 @@ import JellyCharacter from './JellyCharacter';
 import Starfield from './Starfield';
 import { loadConstellationDays } from '../../lib/vaultData';
 
-const JELLY_SRC = '/vault/jelly-blackcat.png';
+// 별자리별 캐릭터 젤리 이미지 — 아직 전용 이미지가 없는 별자리는 기본(검은고양이)을 재사용.
+// 새 이미지가 생기면 이 매핑에 한 줄만 추가하면 됨(JellyCharacter의 인터랙션 로직은 그대로 적용됨).
+const JELLY_SRC_DEFAULT = '/vault/jelly-blackcat.png';
+const JELLY_SRC_BY_KEY = {
+  chick: '/vault/jelly-chick.png',
+  sheep: '/vault/jelly-sheep.png',
+  capybara: '/vault/jelly-capybara.png',
+};
 
 export default function ConstellationDetail({ c, onBack }) {
   const [days, setDays] = useState(null);
@@ -60,7 +67,10 @@ export default function ConstellationDetail({ c, onBack }) {
         </svg>
       </button>
 
-      <JellyCharacter src={JELLY_SRC} alt={`${c.name}의 젤리 캐릭터`} />
+      <JellyCharacter
+        src={JELLY_SRC_BY_KEY[c.catalogKey] ?? JELLY_SRC_DEFAULT}
+        alt={`${c.name}의 젤리 캐릭터`}
+      />
 
       <div className="relative z-20 px-6 text-center" style={{ paddingBottom: 'calc(128px + env(safe-area-inset-bottom))' }}>
         {c.caption && (
