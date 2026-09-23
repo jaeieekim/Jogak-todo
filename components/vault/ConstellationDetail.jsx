@@ -20,6 +20,9 @@ const JELLY_SRC_BY_KEY = {
   capybara: '/vault/jelly-capybara.png',
   hamster: '/vault/jelly-hamster.png',
   panda: '/vault/jelly-panda.png',
+  dino: '/vault/jelly-dino.png',
+  squirrel: '/vault/jelly-squirrel.png',
+  raccoon: '/vault/jelly-raccoon.png',
 };
 
 export default function ConstellationDetail({ c, onBack }) {
