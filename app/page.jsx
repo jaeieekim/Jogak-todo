@@ -8,6 +8,7 @@ import Button from '../components/Button';
 import WeekStrip from '../components/WeekStrip';
 import MascotSpeechBubble from '../components/MascotSpeechBubble';
 import BottomNav from '../components/BottomNav';
+import JellyPopup from '../components/JellyPopup';
 import {
   getMascotState,
   MASCOT_STATE,
@@ -19,8 +20,9 @@ import {
 } from '../lib/mascotState';
 import { generateSteps, GenerateStepsError } from '../lib/generateSteps';
 import { sampleStrategies } from '../lib/prompts/miniStepPrompt';
-import { track, EVENTS } from '../lib/mixpanel';
-import { ensureJellyAccount, earnJelly } from '../lib/jelly';
+import { track, EVENTS, trackAppOpenOnce } from '../lib/mixpanel';
+import { ensureJellyAccount, earnJelly, consumeAppOpenResult } from '../lib/jelly';
+import { loadConstellationDays } from '../lib/vaultData';
 import {
   loadTodosByDate,
   saveTodosByDate,
@@ -28,6 +30,8 @@ import {
   markFirstDonePopupShown,
   saveFirstFeedback,
   wasOnboardingSeen,
+  wasFirstJellyShown,
+  markFirstJellyShown,
 } from '../lib/storage';
 
 // ---------- 날짜 유틸 ----------
@@ -100,14 +104,90 @@ export default function HomePage() {
   const editOriginalTextSnapshot = useRef(null);
   const [resplitAlertTodoId, setResplitAlertTodoId] = useState(null);
   const [resplittingId, setResplittingId] = useState(null); // 재생성 중인 카드 id — 인라인 로더 표시용
+  // 젤리 팝업(V1.0 M3): { kind: 'daily'|'bonus'|'completed', source?, bonusType?, constellationName? } | null
+  const [jellyPopup, setJellyPopup] = useState(null);
 
-  // ---------- 첫 방문 온보딩 게이트 ----------
+  // ---------- 첫 방문 온보딩 게이트 + 앱 진입 처리 ----------
   useEffect(() => {
-    ensureJellyAccount(); // 앱 진입 시 익명 계정 자동 생성 (온보딩 리다이렉트보다 먼저)
-    if (!wasOnboardingSeen()) {
+    trackAppOpenOnce(); // 세션당 1회 (새로고침에는 다시 안 찍힘)
+    const goingToOnboarding = !wasOnboardingSeen();
+
+    (async () => {
+      await ensureJellyAccount(); // 앱 진입 시 익명 계정 자동 생성 + 보너스 판정
+      if (goingToOnboarding) return; // 온보딩 마치고 돌아왔을 때(재마운트 시) 처리 — 지금 보여주면 곧바로 화면이 바뀌어 버림
+      const appOpen = consumeAppOpenResult();
+      if (!appOpen) return;
+      if (appOpen.completed?.length > 0) {
+        const c = appOpen.completed[0];
+        setJellyPopup({ kind: 'completed', constellationName: c.name });
+        trackConstellationComplete(c);
+      } else if (appOpen.bonus_granted) {
+        setJellyPopup({ kind: 'bonus', bonusType: appOpen.bonus_granted });
+        if (appOpen.bonus_granted === 'comeback') {
+          track(EVENTS.COMEBACK_BONUS_GRANTED, { days_away: appOpen.days_away });
+        }
+      }
+    })();
+
+    if (goingToOnboarding) {
       router.replace('/onboarding');
     }
   }, [router]);
+
+  // 생애 첫 완수 별점 팝업과 젤리 팝업이 같은 체크에서 동시에 뜨는 경우, 겹치지 않게 순서대로 보여준다
+  // (첫 완수가 유저가 젤리를 처음 알게 되는 자리라 생략하지 않고 별점 팝업이 닫힌 뒤 이어서 노출).
+  const pendingJellyRun = useRef(null);
+
+  async function trackConstellationComplete(c) {
+    const days = await loadConstellationDays(c.id).catch(() => null);
+    track(EVENTS.CONSTELLATION_COMPLETE, { constellation_id: c.id, days_taken: days });
+  }
+
+  // 체크 한 번으로 나온 적립 결과들(최대 2개: ministep/todo)을 모아 팝업/토스트 우선순위를 정한다.
+  // 우선순위: 별자리 완성 > 오늘 첫 획득(팝업) > 그 외 획득(토스트). hadExistingToast면 기존 토스트가 끝난 뒤 이어서 보여준다.
+  async function handleJellyResults(calls, hadExistingToast, { deferUntilFirstDonePopupCloses = false } = {}) {
+    const results = [];
+    for (const c of calls) {
+      const result = await c.promise;
+      results.push({ source: c.source, result });
+      if (result?.earned > 0) {
+        track(EVENTS.JELLY_EARNED, { source: c.source, count: result.earned, total_pieces: result.total_pieces });
+      }
+    }
+
+    const completed = [];
+    const seen = new Set();
+    for (const { result } of results) {
+      for (const c of result?.completed ?? []) {
+        if (!seen.has(c.id)) {
+          seen.add(c.id);
+          completed.push(c);
+          trackConstellationComplete(c);
+        }
+      }
+    }
+
+    const totalEarned = results.reduce((n, r) => n + (r.result?.earned ?? 0), 0);
+    if (completed.length === 0 && totalEarned === 0) return; // 이미 하루 상한 — 새 소식 없음
+
+    const run = () => {
+      if (completed.length > 0) {
+        setJellyPopup({ kind: 'completed', constellationName: completed[0].name });
+      } else {
+        // 생애 최초 조각 획득 때만 설명 서브 문구를 붙인다 — 이후엔 헤드라인(+버튼)만
+        const isFirstEver = !wasFirstJellyShown();
+        if (isFirstEver) markFirstJellyShown();
+        setJellyPopup({ kind: 'earn', count: totalEarned, isFirstEver });
+      }
+    };
+
+    if (deferUntilFirstDonePopupCloses) {
+      pendingJellyRun.current = run; // 별점 팝업이 닫힐 때(closeFirstFeedbackPopup) 이어서 실행됨
+      return;
+    }
+    if (hadExistingToast) setTimeout(run, 2500);
+    else run();
+  }
 
   // ---------- 저장/로드 ----------
   useEffect(() => {
@@ -209,13 +289,20 @@ export default function HomePage() {
     const justCompletedTodo = !isTodoComplete(prevTodo) && isTodoComplete(nextTodo);
     const isFirstEverCompletion = justCompletedTodo && !wasFirstDonePopupShown();
 
-    // 젤리 적립 (V1.0): 미니스텝이 새로 체크되면 1조각, 할 일이 완수되면 2조각. 하루 1회 제한·중복 방지는 서버가 처리
+    // 젤리 적립 (V1.0): 미니스텝이 새로 체크되면 1조각, 할 일이 완수되면 2조각. 하루 1회 제한·중복 방지는 서버가 처리.
+    // 이 체크로 뜰 기존 토스트('시작이 반이에요' 또는 '오늘 몫은 충분해요')가 있으면, 젤리 팝업/토스트는 그게 끝난 뒤 이어서 보여준다.
     const newlyCheckedStep = nextTodo.steps.some(
       (s) => s.checked && !prevTodo.steps.find((p) => p.id === s.id)?.checked,
     );
-    const jellyDate = toDateKey(new Date());
-    if (newlyCheckedStep) earnJelly('ministep', jellyDate);
-    if (justCompletedTodo) earnJelly('todo', jellyDate);
+    if (newlyCheckedStep || justCompletedTodo) {
+      const jellyDate = toDateKey(new Date());
+      const calls = [];
+      if (newlyCheckedStep) calls.push({ source: 'ministep', promise: earnJelly('ministep', jellyDate) });
+      if (justCompletedTodo) calls.push({ source: 'todo', promise: earnJelly('todo', jellyDate) });
+      const hadExistingToast = justCompletedTodo || (justChecked && prevCheckedCount === 0);
+      // 생애 첫 완수 별점 팝업과 바텀시트가 겹치지 않게, 그 순간엔 별점 팝업이 닫힌 뒤 이어서 보여준다(생략 안 함)
+      handleJellyResults(calls, hadExistingToast, { deferUntilFirstDonePopupCloses: isFirstEverCompletion });
+    }
 
     if (justCompletedTodo) {
       showToast('오늘 몫은 충분해요');
@@ -412,6 +499,11 @@ export default function HomePage() {
   function closeFirstFeedbackPopup() {
     setShowFirstDonePopup(false);
     setFeedbackRating(0);
+    if (pendingJellyRun.current) {
+      const run = pendingJellyRun.current;
+      pendingJellyRun.current = null;
+      setTimeout(run, 300); // 바텀시트가 바뀌는 느낌이 너무 갑작스럽지 않게 살짝 틈을 둠
+    }
   }
 
   function handleFeedbackDismiss() {
@@ -572,6 +664,18 @@ export default function HomePage() {
             {toast}
           </div>
         </div>
+      )}
+
+      {/* 젤리 획득/보너스/별자리 완성 팝업 (V1.0 M3) */}
+      {jellyPopup && (
+        <JellyPopup
+          {...jellyPopup}
+          onClose={() => setJellyPopup(null)}
+          onView={() => {
+            setJellyPopup(null);
+            router.push('/vault?from=popup_cta');
+          }}
+        />
       )}
 
       {/* 생애 첫 할 일 완수 팝업 — 별점 피드백, 바텀 시트 */}

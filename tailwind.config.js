@@ -123,12 +123,19 @@ module.exports = {
           '70%': { transform: 'scale(1.15)' },
           '100%': { transform: 'scale(1)' },
         },
+        // 별 조각 획득 팝업 — 조각이 뿅하고 튀어나오는 등장 (M3)
+        'jelly-pop': {
+          '0%': { transform: 'scale(0) rotate(-20deg)', opacity: '0' },
+          '60%': { transform: 'scale(1.2) rotate(6deg)', opacity: '1' },
+          '100%': { transform: 'scale(1) rotate(0deg)', opacity: '1' },
+        },
       },
       animation: {
         'mascot-jump': 'mascot-jump 700ms ease-in-out infinite',
         'loader-pulse': 'loader-pulse 900ms ease-in-out infinite',
         'demo-particle': 'demo-particle 600ms ease-out forwards',
         'demo-check-pop': 'demo-check-pop 180ms ease-out forwards',
+        'jelly-pop': 'jelly-pop 520ms cubic-bezier(0.34,1.56,0.64,1) both',
       },
     },
   },

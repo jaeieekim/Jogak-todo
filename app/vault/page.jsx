@@ -9,6 +9,7 @@ import Galaxy from '../../components/vault/Galaxy';
 import ConstellationDetail from '../../components/vault/ConstellationDetail';
 import BottomNav from '../../components/BottomNav';
 import { loadGalaxy } from '../../lib/vaultData';
+import { track, EVENTS, trackAppOpenOnce } from '../../lib/mixpanel';
 
 export default function VaultPage() {
   const [data, setData] = useState(null);
@@ -17,6 +18,7 @@ export default function VaultPage() {
   const frameRef = useRef(null);
 
   useEffect(() => {
+    trackAppOpenOnce(); // 홈을 거치지 않고 /vault로 바로 들어온 경우 대비(세션당 1회는 mixpanel.js가 보장)
     let alive = true;
     loadGalaxy().then((result) => {
       if (!alive) return;
@@ -28,7 +30,15 @@ export default function VaultPage() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!data) return;
+    const from = new URLSearchParams(window.location.search).get('from');
+    track(EVENTS.VAULT_OPEN, { entry_point: from === 'popup_cta' ? 'popup_cta' : 'navbar' });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [!!data]);
+
   const open = (c, origin) => {
+    track(EVENTS.CONSTELLATION_DETAIL_OPEN, { constellation_id: c.id });
     const rect = frameRef.current?.getBoundingClientRect();
     const local = rect ? { x: origin.x - rect.left, y: origin.y - rect.top } : origin;
     setView({ c, origin: local, phase: 'opening' });

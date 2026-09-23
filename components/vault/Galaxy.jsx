@@ -4,11 +4,13 @@
 // 실제 데이터(lib/vaultData.js)를 받아 그리기만 하고, 별자리 자체의 모양·색은 shape 안에 들어있다.
 
 import { useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import ConstellationGlyph from './ConstellationGlyph';
 import Starfield from './Starfield';
 import { panBounds } from '../../lib/galaxyLayout';
 
 export default function Galaxy({ data, onOpen }) {
+  const router = useRouter();
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const drag = useRef(null);
   const [dragging, setDragging] = useState(false);
@@ -41,8 +43,6 @@ export default function Galaxy({ data, onOpen }) {
     const rect = e.currentTarget.getBoundingClientRect();
     onOpen(c, { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
   };
-
-  const inProgress = data.constellations.find((c) => c.status === 'progress');
 
   return (
     <div
@@ -101,14 +101,19 @@ export default function Galaxy({ data, onOpen }) {
           const isProgress = c.status === 'progress';
           const isLocked = c.status === 'locked';
           const size = c.shape.size ?? 210;
+          // 완성 별자리만 실제로 탭할 수 있어서 버튼, 나머지는 div(진행 중 별자리 아래 "모으러 가기" 안내는 별도의 실제 버튼이라
+          // <button> 안에 <button>이 중첩되는 걸(잘못된 HTML) 피하려고 이렇게 나눔).
+          const Wrapper = isDone ? 'button' : 'div';
+          const labelTop =
+            (0.5 + (Math.max(...c.shape.stars.map((s) => s.y)) - Math.min(...c.shape.stars.map((s) => s.y))) / 2) * size + 32;
           return (
-            <button
+            <Wrapper
               key={c.id ?? c.catalogKey}
-              type="button"
-              onClick={(e) => handleTap(e, c)}
+              type={isDone ? 'button' : undefined}
+              onClick={isDone ? (e) => handleTap(e, c) : undefined}
               className="absolute -translate-x-1/2 -translate-y-1/2 outline-none"
               style={{ left: c.wx, top: c.wy, cursor: isDone ? 'pointer' : 'default', opacity: isLocked ? 0.5 : 1 }}
-              aria-label={c.name ?? undefined}
+              aria-label={isDone ? c.name : undefined}
             >
               <div
                 className="relative transition-transform duration-300"
@@ -127,44 +132,52 @@ export default function Galaxy({ data, onOpen }) {
                   />
                 </div>
                 {!isLocked && (
-                  <span
-                    className="pointer-events-none absolute left-1/2 -translate-x-1/2 whitespace-nowrap text-vault-12 tracking-wide"
-                    style={{
-                      top:
-                        (0.5 +
-                          (Math.max(...c.shape.stars.map((s) => s.y)) - Math.min(...c.shape.stars.map((s) => s.y))) / 2) *
-                          size +
-                        32,
-                      color: isProgress ? 'var(--color-vault-muted-foreground)' : 'var(--color-vault-foreground)',
-                      opacity: isProgress ? 0.9 : 0.85,
-                      textShadow: '0 0 12px color-mix(in srgb, var(--color-vault-black) 60%, transparent)',
-                    }}
+                  <div
+                    className="absolute left-1/2 flex -translate-x-1/2 flex-col items-center gap-8px"
+                    style={{ top: labelTop }}
                   >
-                    {displayName(c)}
+                    <span
+                      className="pointer-events-none whitespace-nowrap text-vault-12 tracking-wide"
+                      style={{
+                        color: isProgress ? 'var(--color-vault-muted-foreground)' : 'var(--color-vault-foreground)',
+                        opacity: isProgress ? 0.9 : 0.85,
+                        textShadow: '0 0 12px color-mix(in srgb, var(--color-vault-black) 60%, transparent)',
+                      }}
+                    >
+                      {displayName(c)}
+                      {isProgress && (
+                        <span style={{ color: 'var(--color-vault-jelly-a)' }}>
+                          {' '}
+                          · {c.pieceCount}/{c.pieceTotal}
+                        </span>
+                      )}
+                    </span>
+                    {/* "잠든 ○○자리 알" 문구 바로 아래 — 탭하면 홈으로 이동해 더 모으러 가게 유도 */}
                     {isProgress && (
-                      <span style={{ color: 'var(--color-vault-jelly-a)' }}>
-                        {' '}
-                        · {c.pieceCount}/{c.pieceTotal}
-                      </span>
+                      <button
+                        type="button"
+                        onClick={() => router.push('/')}
+                        className="max-w-[70vw] rounded-16 px-3.5 py-2 text-center text-vault-13 leading-snug backdrop-blur-md transition-transform active:scale-95"
+                        style={{
+                          background: 'color-mix(in srgb, var(--color-vault-mascot-bg) 72%, transparent)',
+                          border: '1px solid color-mix(in srgb, var(--color-vault-jelly-a) 35%, transparent)',
+                          color: 'var(--color-vault-foreground)',
+                          boxShadow: '0 8px 30px color-mix(in srgb, var(--color-vault-black) 45%, transparent)',
+                        }}
+                      >
+                        <span style={{ color: 'var(--color-vault-amber)' }}>✦</span>{' '}
+                        {c.pieceCount === 0 ? '아직 별 조각이 없어요! 모으러 가볼까요?' : '새로운 별 조각을 모으러 가볼까요?'}
+                      </button>
                     )}
-                  </span>
+                  </div>
                 )}
               </div>
-            </button>
+            </Wrapper>
           );
         })}
-
-        {inProgress && inProgress.pieceCount === 0 && (
-          <div
-            className="absolute -translate-x-1/2 text-center text-vault-13"
-            style={{ left: 0, top: 190, color: 'var(--color-vault-muted-foreground)' }}
-          >
-            첫 조각을 기다리는 중…
-          </div>
-        )}
       </div>
 
-      {/* 상단: 중앙으로 돌아가기 + 마스코트 한마디 */}
+      {/* 상단: 중앙으로 돌아가기 */}
       <div className="pointer-events-none absolute inset-x-0 z-30 flex flex-col items-center gap-3" style={{ top: 'calc(76px + env(safe-area-inset-top))' }}>
         <button
           type="button"
@@ -178,17 +191,6 @@ export default function Galaxy({ data, onOpen }) {
         >
           <span style={{ color: 'var(--color-vault-jelly-a)' }}>◎</span> 중앙으로 돌아가기
         </button>
-        <div
-          className="pointer-events-none max-w-[70vw] rounded-16 px-3.5 py-2 text-vault-13 leading-snug backdrop-blur-md"
-          style={{
-            background: 'color-mix(in srgb, var(--color-vault-mascot-bg) 72%, transparent)',
-            border: '1px solid color-mix(in srgb, var(--color-vault-jelly-a) 35%, transparent)',
-            color: 'var(--color-vault-foreground)',
-            boxShadow: '0 8px 30px color-mix(in srgb, var(--color-vault-black) 45%, transparent)',
-          }}
-        >
-          <span style={{ color: 'var(--color-vault-amber)' }}>✦</span> 새로운 별 조각을 모으러 가볼까요?
-        </div>
       </div>
 
       {/* 하단: 시작한 날 / 모은 조각 — 하단 내비게이션 바(56px)와 겹치지 않게 그 위에 둠 */}
