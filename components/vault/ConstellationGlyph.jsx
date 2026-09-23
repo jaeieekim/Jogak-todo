@@ -8,7 +8,7 @@
 // 항상 완성 상태로만 쓰이므로 진행률(filled)에 따른 부분 렌더링은 없다.
 // (SVG는 next/image 최적화기가 기본적으로 막아서 일반 img 태그를 씀 — 벡터라 최적화도 불필요)
 
-export default function ConstellationGlyph({ shape, size, filled, locked = false, sparkIndex = null }) {
+export default function ConstellationGlyph({ shape, size, filled, locked = false, sparkIndex = null, glyphId = 'g' }) {
   const s = size ?? shape.size ?? 210;
 
   if (shape.image) {
@@ -81,7 +81,10 @@ export default function ConstellationGlyph({ shape, size, filled, locked = false
           );
         }
 
-        const gid = `jelly-glow-${i}`;
+        // 은하수 화면엔 여러 별자리 SVG가 동시에 떠 있어서, 별 인덱스만으로 id를 만들면 서로 다른
+        // 별자리끼리 id가 겹쳐(예: 모든 별자리의 0번째 별이 전부 "jelly-glow-0") 브라우저가 문서에서
+        // 가장 먼저 나온 그라디언트(=검은고양이자리 색)를 엉뚱하게 재사용하는 버그가 있었다 — glyphId로 별자리별로 구분.
+        const gid = `jelly-glow-${glyphId}-${i}`;
         return (
           <g key={i}>
             <defs>

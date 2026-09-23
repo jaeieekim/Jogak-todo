@@ -136,6 +136,7 @@ export default function Galaxy({ data, onOpen }) {
                     size={size}
                     filled={isProgress ? c.pieceCount : isLocked ? 0 : (c.shape.stars?.length ?? 0)}
                     locked={isLocked}
+                    glyphId={c.id ?? c.catalogKey}
                     sparkIndex={isProgress ? c.sparkIndex : null}
                   />
                 </div>

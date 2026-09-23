@@ -40,7 +40,7 @@ export default function ConstellationDetail({ c, onBack }) {
         style={{ width: (c.shape.size ?? 210) * 1.4, height: (c.shape.size ?? 210) * 1.4 }}
       >
         <div style={{ transform: 'scale(1.4)', transformOrigin: 'center' }}>
-          <ConstellationGlyph shape={c.shape} filled={c.shape.stars?.length} />
+          <ConstellationGlyph shape={c.shape} filled={c.shape.stars?.length} glyphId={c.id ?? c.catalogKey} />
         </div>
       </div>
 
