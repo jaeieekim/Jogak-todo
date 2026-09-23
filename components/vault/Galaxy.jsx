@@ -157,7 +157,7 @@ export default function Galaxy({ data, onOpen }) {
                       <button
                         type="button"
                         onClick={() => router.push('/')}
-                        className="max-w-[70vw] rounded-16 px-3.5 py-2 text-center text-vault-13 leading-snug backdrop-blur-md transition-transform active:scale-95"
+                        className="whitespace-nowrap rounded-16 px-3.5 py-2 text-center text-vault-13 leading-snug backdrop-blur-md transition-transform active:scale-95"
                         style={{
                           background: 'color-mix(in srgb, var(--color-vault-mascot-bg) 72%, transparent)',
                           border: '1px solid color-mix(in srgb, var(--color-vault-jelly-a) 35%, transparent)',
