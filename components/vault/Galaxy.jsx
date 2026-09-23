@@ -16,10 +16,15 @@ export default function Galaxy({ data, onOpen }) {
   const [dragging, setDragging] = useState(false);
 
   const PAN = panBounds(data.constellations.map((c) => ({ x: c.wx, y: c.wy })));
+  // 드래그가 완성 별자리 버튼 위에서 시작되면(Pointer Capture 때문에) pointerup 뒤에 그 버튼의
+  // click 이벤트가 뒤따라온다. drag.current는 pointerup에서 바로 비워지므로 그 click 시점엔 이미 null이라
+  // "방금 드래그였다"를 못 읽는다 — 그래서 클릭까지 살아있는 별도 ref로 "방금 드래그였는지"만 따로 기억한다.
+  const wasDrag = useRef(false);
 
   const pointerDown = (e) => {
     e.target.setPointerCapture?.(e.pointerId);
     drag.current = { startX: e.clientX, startY: e.clientY, ox: offset.x, oy: offset.y, moved: 0 };
+    wasDrag.current = false;
     setDragging(true);
   };
   const pointerMove = (e) => {
@@ -27,6 +32,7 @@ export default function Galaxy({ data, onOpen }) {
     const dx = e.clientX - drag.current.startX;
     const dy = e.clientY - drag.current.startY;
     drag.current.moved = Math.max(drag.current.moved, Math.hypot(dx, dy));
+    if (drag.current.moved > 6) wasDrag.current = true;
     setOffset({
       x: Math.max(PAN.minX, Math.min(PAN.maxX, drag.current.ox + dx)),
       y: Math.max(PAN.minY, Math.min(PAN.maxY, drag.current.oy + dy)),
@@ -38,7 +44,7 @@ export default function Galaxy({ data, onOpen }) {
   };
 
   const handleTap = (e, c) => {
-    if (drag.current && drag.current.moved > 6) return; // 팬 동작이었다면 무시
+    if (wasDrag.current) return; // 팬 동작이었다면 무시(눌렀던 버튼의 클릭으로 오인 방지)
     if (c.status !== 'done') return; // 진행 중·잠긴 별자리는 상세가 없음
     const rect = e.currentTarget.getBoundingClientRect();
     onOpen(c, { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
@@ -104,8 +110,10 @@ export default function Galaxy({ data, onOpen }) {
           // 완성 별자리만 실제로 탭할 수 있어서 버튼, 나머지는 div(진행 중 별자리 아래 "모으러 가기" 안내는 별도의 실제 버튼이라
           // <button> 안에 <button>이 중첩되는 걸(잘못된 HTML) 피하려고 이렇게 나눔).
           const Wrapper = isDone ? 'button' : 'div';
-          const labelTop =
-            (0.5 + (Math.max(...c.shape.stars.map((s) => s.y)) - Math.min(...c.shape.stars.map((s) => s.y))) / 2) * size + 32;
+          // shape.image(완성된 SVG 통째로 쓰는 별자리)는 별 좌표가 없어 박스 전체 높이 기준으로 라벨을 둔다
+          const labelTop = c.shape.stars
+            ? (0.5 + (Math.max(...c.shape.stars.map((s) => s.y)) - Math.min(...c.shape.stars.map((s) => s.y))) / 2) * size + 32
+            : size + 32;
           return (
             <Wrapper
               key={c.id ?? c.catalogKey}
@@ -126,7 +134,7 @@ export default function Galaxy({ data, onOpen }) {
                   <ConstellationGlyph
                     shape={c.shape}
                     size={size}
-                    filled={isProgress ? c.pieceCount : isLocked ? 0 : c.shape.stars.length}
+                    filled={isProgress ? c.pieceCount : isLocked ? 0 : (c.shape.stars?.length ?? 0)}
                     locked={isLocked}
                     sparkIndex={isProgress ? c.sparkIndex : null}
                   />

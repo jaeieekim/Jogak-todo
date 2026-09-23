@@ -3,9 +3,27 @@
 // 별자리 SVG 그리기 — Figma ConstellationView.tsx를 그대로 옮김.
 // 좌표는 shape.stars(정규화 0~1)를 받아 그리기만 한다 — 모양 자체를 바꾸려면
 // lib/constellationShapes.js만 고치면 되고 이 컴포넌트는 손댈 필요 없다.
+//
+// shape.image가 있으면(별 좌표 대신 완성된 SVG 통째로 쓰는 별자리) 그 이미지를 그대로 그린다 —
+// 항상 완성 상태로만 쓰이므로 진행률(filled)에 따른 부분 렌더링은 없다.
+// (SVG는 next/image 최적화기가 기본적으로 막아서 일반 img 태그를 씀 — 벡터라 최적화도 불필요)
 
 export default function ConstellationGlyph({ shape, size, filled, locked = false, sparkIndex = null }) {
   const s = size ?? shape.size ?? 210;
+
+  if (shape.image) {
+    // eslint-disable-next-line @next/next/no-img-element
+    return (
+      <img
+        src={shape.image}
+        alt=""
+        width={s}
+        height={s}
+        style={{ display: 'block', filter: locked ? 'blur(2px) grayscale(0.4)' : undefined, opacity: locked ? 0.5 : 1 }}
+      />
+    );
+  }
+
   const xs = shape.stars.map((st) => st.x);
   const ys = shape.stars.map((st) => st.y);
   // 별자리 좌표가 어디에 몰려 있든 박스 중앙에 오도록 보정

@@ -8,7 +8,7 @@ import { useEffect, useRef, useState } from 'react';
 import Galaxy from '../../components/vault/Galaxy';
 import ConstellationDetail from '../../components/vault/ConstellationDetail';
 import BottomNav from '../../components/BottomNav';
-import { loadGalaxy } from '../../lib/vaultData';
+import { loadGalaxy, buildPreviewGalaxy } from '../../lib/vaultData';
 import { track, EVENTS, trackAppOpenOnce } from '../../lib/mixpanel';
 
 export default function VaultPage() {
@@ -18,6 +18,12 @@ export default function VaultPage() {
   const frameRef = useRef(null);
 
   useEffect(() => {
+    // 개발용 미리보기: /vault?preview=full — 실제 Supabase를 안 거치고 전체 별자리를 다 모은 상태를 바로 보여준다.
+    // 실제 계정·DB 데이터는 전혀 건드리지 않는다.
+    if (new URLSearchParams(window.location.search).get('preview') === 'full') {
+      setData(buildPreviewGalaxy());
+      return;
+    }
     trackAppOpenOnce(); // 홈을 거치지 않고 /vault로 바로 들어온 경우 대비(세션당 1회는 mixpanel.js가 보장)
     let alive = true;
     loadGalaxy().then((result) => {
