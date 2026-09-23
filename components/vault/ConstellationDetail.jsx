@@ -22,6 +22,10 @@ const JELLY_SRC_BY_KEY = {
   panda: '/vault/jelly-panda.png',
   dino: '/vault/jelly-dino.png',
   squirrel: '/vault/jelly-squirrel.png',
+  cheesecat: '/vault/jelly-cheesecat.png',
+  rabbit: '/vault/jelly-rabbit.png',
+  dog: '/vault/jelly-dog.png',
+  quokka: '/vault/jelly-quokka.png',
   raccoon: '/vault/jelly-raccoon.png',
 };
 
