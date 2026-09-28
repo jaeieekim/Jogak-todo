@@ -7,8 +7,10 @@
 import { useEffect, useRef, useState } from 'react';
 import Galaxy from '../../components/vault/Galaxy';
 import ConstellationDetail from '../../components/vault/ConstellationDetail';
+import VaultOnboarding from '../../components/vault/VaultOnboarding';
 import BottomNav from '../../components/BottomNav';
 import { loadGalaxy, buildPreviewGalaxy } from '../../lib/vaultData';
+import { wasVaultOnboardingSeen } from '../../lib/storage';
 import { track, EVENTS, trackAppOpenOnce } from '../../lib/mixpanel';
 
 export default function VaultPage() {
@@ -16,6 +18,14 @@ export default function VaultPage() {
   const [failed, setFailed] = useState(false);
   const [view, setView] = useState(null); // { c, origin, phase: 'opening' | 'open' | 'closing' }
   const frameRef = useRef(null);
+  // 보관소 첫 진입 온보딩(2단계) — 처음 한 번만, Galaxy 데이터 로딩과 별개로 즉시 판단 가능해서 따로 관리
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  useEffect(() => {
+    // 테스트용: /vault?onboarding=1 — 이미 본 적 있어도(플래그 무시) 강제로 온보딩부터 보여준다.
+    const forceOnboarding = new URLSearchParams(window.location.search).get('onboarding') === '1';
+    setShowOnboarding(forceOnboarding || !wasVaultOnboardingSeen());
+  }, []);
 
   useEffect(() => {
     // 개발용 미리보기: /vault?preview=full — 실제 Supabase를 안 거치고 전체 별자리를 다 모은 상태를 바로 보여준다.
@@ -99,9 +109,11 @@ export default function VaultPage() {
             <ConstellationDetail c={view.c} onBack={back} />
           </div>
         )}
+
+        {showOnboarding && <VaultOnboarding onDone={() => setShowOnboarding(false)} />}
       </div>
-      {/* 별자리 상세(몰입 화면)에서는 숨기고, 은하수·로딩·에러 상태에서는 항상 보여줌 */}
-      {!view && <BottomNav active="vault" />}
+      {/* 별자리 상세(몰입 화면)·첫 진입 온보딩에서는 숨기고, 은하수·로딩·에러 상태에서는 항상 보여줌 */}
+      {!view && !showOnboarding && <BottomNav active="vault" />}
     </div>
   );
 }

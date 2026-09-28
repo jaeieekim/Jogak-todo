@@ -187,3 +187,15 @@ html {
   30% { opacity: 0.5; transform: translate(-50%, -50%) scale(0.9); }
   100% { opacity: 0; transform: translate(-50%, -50%) scale(1.5); }
 }
+/* 보관소 온보딩2의 "Touch!" 힌트 깜빡임 (Figma node 96:15) */
+@keyframes vault-touch-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+/* 로그인 화면 별사탕 마스코트 전용 점핑 — 공용 mascot-jump(700ms, -12px)보다 느긋하고 크게 뛴다.
+   공용 애니메이션을 바꾸면 홈 화면 생성 중 로딩 모션까지 같이 바뀌어버려서 이 화면만의 별도 키프레임으로 둠. */
+@keyframes login-star-jump {
+  0%, 24%, 50%, 100% { transform: translateY(0); }
+  12% { transform: translateY(-20px); }
+  37% { transform: translateY(-24px); }
+}

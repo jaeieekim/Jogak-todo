@@ -8,7 +8,7 @@
 import { useRef, useState } from 'react';
 import Image from 'next/image';
 
-export default function JellyCharacter({ src, alt, tint }) {
+export default function JellyCharacter({ src, alt, tint, onInteract }) {
   const [pos, setPos] = useState({ x: 0, y: 0 });
   const [held, setHeld] = useState(false);
   const [punch, setPunch] = useState(0);
@@ -19,6 +19,7 @@ export default function JellyCharacter({ src, alt, tint }) {
     e.target.setPointerCapture?.(e.pointerId);
     drag.current = { sx: e.clientX, sy: e.clientY, ox: pos.x, oy: pos.y, moved: 0 };
     setHeld(true);
+    onInteract?.(); // 처음 만졌을 때 1번만 필요한 신호(예: 온보딩 "Touch!" 힌트 없애기) — 호출부에서 알아서 1회만 반응
   };
   const move = (e) => {
     if (!drag.current) return;

@@ -531,9 +531,19 @@ export default function HomePage() {
     <div className="mx-auto min-h-screen w-full max-w-[480px] bg-bg-default">
       <div style={{ paddingBottom: 'calc(56px + var(--spacing-32))' }}>
         {/* 헤더 */}
-        <header className="px-20px pt-24px pb-8px">
-          <h1 className="text-20 font-semibold text-text-primary">조각투두</h1>
-          <p className="text-14 font-normal text-text-muted">쪼개서 쉽게 시작하는 투두리스트</p>
+        <header className="flex items-start justify-between px-20px pt-24px pb-8px">
+          <div>
+            <h1 className="text-20 font-semibold text-text-primary">조각투두</h1>
+            <p className="text-14 font-normal text-text-muted">쪼개서 쉽게 시작하는 투두리스트</p>
+          </div>
+          {/* 보조 버튼 스펙(bg-tint + brand-pressed 텍스트) 그대로 — 로그인 페이지로 이동 */}
+          <button
+            type="button"
+            onClick={() => router.push('/login')}
+            className="shrink-0 rounded-8 bg-bg-tint px-12px py-8px text-14 font-medium text-brand-pressed"
+          >
+            로그인
+          </button>
         </header>
 
         {/* 주간 내비게이션 (WeekStrip) */}
