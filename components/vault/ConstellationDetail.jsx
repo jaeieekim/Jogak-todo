@@ -28,6 +28,7 @@ const JELLY_SRC_BY_KEY = {
   quokka: '/vault/jelly-quokka.png',
   raccoon: '/vault/jelly-raccoon.png',
   seal: '/vault/jelly-seal.png',
+  otter: '/vault/jelly-otter.png',
 };
 
 export default function ConstellationDetail({ c, onBack }) {
