@@ -57,12 +57,14 @@ export default function JellyPopup({ kind, count, isFirstEver, bonusType, conste
     const headline = kind === 'login_bonus' ? '검은고양이 젤리를 받았어요!' : '별자리가 완성되었어요!';
     return (
       <PopupShell onClose={onClose}>
-        <JellyMarquee />
-        <h2 className="pt-16px text-center text-17 font-semibold text-text-primary">{headline}</h2>
+        <h2 className="text-center text-17 font-semibold text-text-primary">{headline}</h2>
         {kind === 'completed' && constellationName && (
           // 카탈로그 이름은 전부 "~자리"로 끝나(모음 받침) 조사는 항상 "가"
           <p className="pt-8px text-center text-15 font-normal text-text-secondary">{constellationName}가 완성됐어요</p>
         )}
+        <div className="pt-16px">
+          <JellyMarquee />
+        </div>
         <div className="pt-24px">
           <Button className="w-full" onClick={onView}>
             캐릭터 젤리 획득하러 가기
