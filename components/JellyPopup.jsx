@@ -41,7 +41,9 @@ export default function JellyPopup({ kind, count, isFirstEver, bonusType, conste
         <h2 className="text-center text-17 font-semibold text-text-primary">{headline}</h2>
         {!isBonus && isFirstEver && (
           <p className="pt-8px text-center text-15 font-normal text-text-secondary">
-            별조각을 모아 별자리를 만들고 캐릭터 젤리를 얻을 수 있어요.
+            별조각을 모아 별자리를 만들고
+            <br />
+            캐릭터 젤리를 얻을 수 있어요.
           </p>
         )}
         <div className="pt-24px">
