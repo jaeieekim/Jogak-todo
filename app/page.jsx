@@ -108,6 +108,7 @@ export default function HomePage() {
   const [jellyPopup, setJellyPopup] = useState(null);
   // 헤더의 로그인/로그아웃 버튼 — 카카오 등 실계정이 연결된 상태인지(익명 계정만 있으면 false)
   const [loggedIn, setLoggedIn] = useState(false);
+  const [authDebug, setAuthDebug] = useState(''); // TODO: 로그인 상태 판별 디버그 끝나면 제거
 
   // ---------- 첫 방문 온보딩 게이트 + 앱 진입 처리 ----------
   useEffect(() => {
@@ -115,8 +116,22 @@ export default function HomePage() {
     const goingToOnboarding = !wasOnboardingSeen();
 
     (async () => {
-      await ensureJellyAccount(); // 앱 진입 시 익명 계정 자동 생성 + 보너스 판정
+      const supabase = await ensureJellyAccount(); // 앱 진입 시 익명 계정 자동 생성 + 보너스 판정
       setLoggedIn(await isLoggedIn());
+      if (supabase) {
+        const { data, error } = await supabase.auth.getUser();
+        setAuthDebug(
+          JSON.stringify(
+            {
+              error: error?.message,
+              is_anonymous: data?.user?.is_anonymous,
+              identities: data?.user?.identities,
+            },
+            null,
+            1
+          )
+        );
+      }
       if (goingToOnboarding) return; // 온보딩 마치고 돌아왔을 때(재마운트 시) 처리 — 지금 보여주면 곧바로 화면이 바뀌어 버림
       const appOpen = consumeAppOpenResult();
       if (!appOpen) return;
@@ -555,6 +570,13 @@ export default function HomePage() {
             {loggedIn ? '로그아웃' : '로그인'}
           </button>
         </header>
+
+        {/* TODO: 로그인 상태 판별 디버그용 — 원인 확인되면 제거 */}
+        {authDebug && (
+          <pre className="mx-20px mb-8px whitespace-pre-wrap break-all rounded-8 bg-bg-surface p-12px text-12 text-text-muted">
+            {authDebug}
+          </pre>
+        )}
 
         {/* 주간 내비게이션 (WeekStrip) */}
         <WeekStrip
