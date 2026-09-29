@@ -21,7 +21,7 @@ import {
 import { generateSteps, GenerateStepsError } from '../lib/generateSteps';
 import { sampleStrategies } from '../lib/prompts/miniStepPrompt';
 import { track, EVENTS, trackAppOpenOnce } from '../lib/mixpanel';
-import { ensureJellyAccount, earnJelly, consumeAppOpenResult } from '../lib/jelly';
+import { ensureJellyAccount, earnJelly, consumeAppOpenResult, isLoggedIn, signOutUser } from '../lib/jelly';
 import { loadConstellationDays } from '../lib/vaultData';
 import {
   loadTodosByDate,
@@ -106,6 +106,8 @@ export default function HomePage() {
   const [resplittingId, setResplittingId] = useState(null); // 재생성 중인 카드 id — 인라인 로더 표시용
   // 젤리 팝업(V1.0 M3): { kind: 'daily'|'bonus'|'completed', source?, bonusType?, constellationName? } | null
   const [jellyPopup, setJellyPopup] = useState(null);
+  // 헤더의 로그인/로그아웃 버튼 — 카카오 등 실계정이 연결된 상태인지(익명 계정만 있으면 false)
+  const [loggedIn, setLoggedIn] = useState(false);
 
   // ---------- 첫 방문 온보딩 게이트 + 앱 진입 처리 ----------
   useEffect(() => {
@@ -114,6 +116,7 @@ export default function HomePage() {
 
     (async () => {
       await ensureJellyAccount(); // 앱 진입 시 익명 계정 자동 생성 + 보너스 판정
+      setLoggedIn(await isLoggedIn());
       if (goingToOnboarding) return; // 온보딩 마치고 돌아왔을 때(재마운트 시) 처리 — 지금 보여주면 곧바로 화면이 바뀌어 버림
       const appOpen = consumeAppOpenResult();
       if (!appOpen) return;
@@ -536,13 +539,20 @@ export default function HomePage() {
             <h1 className="text-20 font-semibold text-text-primary">조각투두</h1>
             <p className="text-14 font-normal text-text-muted">쪼개서 쉽게 시작하는 투두리스트</p>
           </div>
-          {/* 보조 버튼 스펙(bg-tint + brand-pressed 텍스트) 그대로 — 로그인 페이지로 이동 */}
+          {/* 보조 버튼 스펙(bg-tint + brand-pressed 텍스트) 그대로 — 로그인 상태면 로그아웃으로 전환 */}
           <button
             type="button"
-            onClick={() => router.push('/login')}
+            onClick={async () => {
+              if (loggedIn) {
+                await signOutUser();
+                window.location.reload(); // 익명 계정으로 새로 시작
+              } else {
+                router.push('/login');
+              }
+            }}
             className="shrink-0 rounded-8 bg-bg-tint px-12px py-8px text-14 font-medium text-brand-pressed"
           >
-            로그인
+            {loggedIn ? '로그아웃' : '로그인'}
           </button>
         </header>
 
