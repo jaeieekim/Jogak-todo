@@ -82,26 +82,6 @@ export default function Galaxy({ data, onOpen }) {
           transition: dragging ? 'none' : 'transform 0.4s cubic-bezier(0.22,1,0.36,1)',
         }}
       >
-        {/* 별자리를 잇는 흐린 선 */}
-        <svg className="pointer-events-none absolute left-0 top-0" style={{ overflow: 'visible' }} width={0} height={0}>
-          {data.constellations.slice(0, -1).map((c, i) => {
-            const next = data.constellations[i + 1];
-            const dim = c.status === 'locked' || next.status === 'locked';
-            return (
-              <line
-                key={c.id ?? c.catalogKey}
-                x1={c.wx}
-                y1={c.wy}
-                x2={next.wx}
-                y2={next.wy}
-                stroke="var(--color-vault-link-line)"
-                strokeOpacity={dim ? 0.07 : 0.14}
-                strokeWidth={1}
-              />
-            );
-          })}
-        </svg>
-
         {data.constellations.map((c) => {
           const isDone = c.status === 'done';
           const isProgress = c.status === 'progress';
