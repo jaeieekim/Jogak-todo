@@ -12,6 +12,7 @@ import BottomNav from '../../components/BottomNav';
 import { loadGalaxy, buildPreviewGalaxy } from '../../lib/vaultData';
 import { wasVaultOnboardingSeen } from '../../lib/storage';
 import { track, EVENTS, trackAppOpenOnce } from '../../lib/mixpanel';
+import { retryKakaoIfIdentityConflict } from '../../lib/jelly';
 
 export default function VaultPage() {
   const [data, setData] = useState(null);
@@ -20,7 +21,6 @@ export default function VaultPage() {
   const frameRef = useRef(null);
   // 보관소 첫 진입 온보딩(2단계) — 처음 한 번만, Galaxy 데이터 로딩과 별개로 즉시 판단 가능해서 따로 관리
   const [showOnboarding, setShowOnboarding] = useState(false);
-
   useEffect(() => {
     // 테스트용: /vault?onboarding=1 — 이미 본 적 있어도(플래그 무시) 강제로 온보딩부터 보여준다.
     const forceOnboarding = new URLSearchParams(window.location.search).get('onboarding') === '1';
@@ -28,6 +28,9 @@ export default function VaultPage() {
   }, []);
 
   useEffect(() => {
+    // 카카오 linkIdentity가 "이미 다른 기기에 연결된 계정"이라 실패해 돌아온 경우 — 곧바로 카카오로
+    // 다시 리다이렉트되므로 아래 로딩 로직은 그냥 건너뛴다
+    if (retryKakaoIfIdentityConflict()) return;
     // 개발용 미리보기: /vault?preview=full — 실제 Supabase를 안 거치고 전체 별자리를 다 모은 상태를 바로 보여준다.
     // 실제 계정·DB 데이터는 전혀 건드리지 않는다.
     if (new URLSearchParams(window.location.search).get('preview') === 'full') {
