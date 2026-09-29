@@ -7,7 +7,7 @@ import Image from 'next/image';
 import Button from './Button';
 
 const BONUS_COPY = {
-  first: '시작 기념 조각 세 개 놓고 갈게요',
+  first: '로그인 선물로 별조각을 3개 받았어요!', // 카카오 등 실계정 첫 로그인 시(계정당 1회) — 사용자 지시(2026-09-29)
   comeback: '다시 왔네요. 조각 세 개 드릴게요',
 };
 

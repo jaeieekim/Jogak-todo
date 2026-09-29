@@ -108,6 +108,9 @@ export default function HomePage() {
   const [jellyPopup, setJellyPopup] = useState(null);
   // 헤더의 로그인/로그아웃 버튼 — 카카오 등 실계정이 연결된 상태인지(익명 계정만 있으면 false)
   const [loggedIn, setLoggedIn] = useState(false);
+  // 첫 로그인 시 "로그인 선물"(별조각 3개)과 "검은고양이 젤리"(즉시 완성)가 같은 순간에 같이 지급될 수 있어서,
+  // 겹치지 않게 하나 보여주고 닫히면 이어서 다음 걸 보여주는 큐
+  const nextJellyPopup = useRef(null);
 
   // ---------- 첫 방문 온보딩 게이트 + 앱 진입 처리 ----------
   useEffect(() => {
@@ -120,10 +123,12 @@ export default function HomePage() {
       if (goingToOnboarding) return; // 온보딩 마치고 돌아왔을 때(재마운트 시) 처리 — 지금 보여주면 곧바로 화면이 바뀌어 버림
       const appOpen = consumeAppOpenResult();
       if (!appOpen) return;
-      // 우선순위: 로그인 보너스(검은고양이자리 즉시 완성) > 별자리 완성 > 첫/복귀 보너스
+      // 우선순위: 별자리 완성 > 첫/복귀 보너스(로그인 선물) > 로그인 보너스(검은고양이자리 즉시 완성)
+      // 첫 로그인 땐 보너스와 로그인 보너스가 같이 지급될 수 있어서, 뒤 순서는 큐에 담아뒀다가 이어서 보여준다
       if (appOpen.login_jelly_granted) {
-        setJellyPopup({ kind: 'login_bonus' });
-      } else if (appOpen.completed?.length > 0) {
+        nextJellyPopup.current = { kind: 'login_bonus' };
+      }
+      if (appOpen.completed?.length > 0) {
         const c = appOpen.completed[0];
         setJellyPopup({ kind: 'completed', constellationName: c.name });
         trackConstellationComplete(c);
@@ -132,6 +137,9 @@ export default function HomePage() {
         if (appOpen.bonus_granted === 'comeback') {
           track(EVENTS.COMEBACK_BONUS_GRANTED, { days_away: appOpen.days_away });
         }
+      } else if (nextJellyPopup.current) {
+        setJellyPopup(nextJellyPopup.current);
+        nextJellyPopup.current = null;
       }
     })();
 
@@ -693,10 +701,19 @@ export default function HomePage() {
       {jellyPopup && (
         <JellyPopup
           {...jellyPopup}
-          onClose={() => setJellyPopup(null)}
+          onClose={() => {
+            setJellyPopup(nextJellyPopup.current);
+            nextJellyPopup.current = null;
+          }}
           onView={() => {
-            setJellyPopup(null);
-            router.push('/vault?from=popup_cta');
+            if (nextJellyPopup.current) {
+              // 뒤에 보여줄 팝업이 남아있으면 아직 이동하지 않고 그것부터 보여준다
+              setJellyPopup(nextJellyPopup.current);
+              nextJellyPopup.current = null;
+            } else {
+              setJellyPopup(null);
+              router.push('/vault?from=popup_cta');
+            }
           }}
         />
       )}
