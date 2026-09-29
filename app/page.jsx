@@ -120,7 +120,10 @@ export default function HomePage() {
       if (goingToOnboarding) return; // 온보딩 마치고 돌아왔을 때(재마운트 시) 처리 — 지금 보여주면 곧바로 화면이 바뀌어 버림
       const appOpen = consumeAppOpenResult();
       if (!appOpen) return;
-      if (appOpen.completed?.length > 0) {
+      // 우선순위: 로그인 보너스(검은고양이자리 즉시 완성) > 별자리 완성 > 첫/복귀 보너스
+      if (appOpen.login_jelly_granted) {
+        setJellyPopup({ kind: 'login_bonus' });
+      } else if (appOpen.completed?.length > 0) {
         const c = appOpen.completed[0];
         setJellyPopup({ kind: 'completed', constellationName: c.name });
         trackConstellationComplete(c);

@@ -129,6 +129,11 @@ module.exports = {
           '60%': { transform: 'scale(1.2) rotate(6deg)', opacity: '1' },
           '100%': { transform: 'scale(1) rotate(0deg)', opacity: '1' },
         },
+        // 별자리 완성/로그인 보너스 팝업 — 캐릭터 젤리들이 옆으로 계속 지나감(목록을 2벌 이어붙여 -50%까지만 이동하면 끊김 없음)
+        'jelly-marquee': {
+          '0%': { transform: 'translateX(0)' },
+          '100%': { transform: 'translateX(-50%)' },
+        },
       },
       animation: {
         'mascot-jump': 'mascot-jump 700ms ease-in-out infinite',
@@ -136,6 +141,7 @@ module.exports = {
         'demo-particle': 'demo-particle 600ms ease-out forwards',
         'demo-check-pop': 'demo-check-pop 180ms ease-out forwards',
         'jelly-pop': 'jelly-pop 520ms cubic-bezier(0.34,1.56,0.64,1) both',
+        'jelly-marquee': 'jelly-marquee 14s linear infinite',
       },
     },
   },
