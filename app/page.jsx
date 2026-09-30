@@ -218,7 +218,7 @@ export default function HomePage() {
   // 최근 완료 할 일 추천 칩 — 최근 10일 내에 "완료"(originalChecked이고 스텝 전부 체크)한 할 일 중,
   // 오늘 이미 등록된 문구는 빼고 문구 기준으로 중복 없이 최신순 최대 6개. 탭하면 입력창에 채워준다.
   const recentDoneSuggestions = useMemo(() => {
-    const cutoffKey = toDateKey(addDays(today, -9)); // 오늘 포함 10일
+    const cutoffKey = toDateKey(addDays(today, -4)); // 오늘 포함 5일
     const todayTexts = new Set(todos.map((t) => t.text));
     const seen = new Set();
     const result = [];
