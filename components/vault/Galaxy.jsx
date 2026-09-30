@@ -167,7 +167,7 @@ export default function Galaxy({ data, onOpen }) {
       </div>
 
       {/* 상단: 중앙으로 돌아가기 */}
-      <div className="pointer-events-none absolute inset-x-0 z-30 flex flex-col items-center gap-3" style={{ top: 'calc(76px + env(safe-area-inset-top))' }}>
+      <div className="pointer-events-none absolute inset-x-0 z-30 flex flex-col items-center gap-3" style={{ top: 'calc(52px + env(safe-area-inset-top))' }}>
         <button
           type="button"
           onClick={() => setOffset({ x: 0, y: 0 })}
