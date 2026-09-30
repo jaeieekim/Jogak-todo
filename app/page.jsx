@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import TodoCard from '../components/TodoCard';
@@ -214,6 +214,27 @@ export default function HomePage() {
   }, [todosByDate, loaded]);
 
   const todos = todosByDate[selectedDate] || [];
+
+  // 최근 완료 할 일 추천 칩 — 최근 10일 내에 "완료"(originalChecked이고 스텝 전부 체크)한 할 일 중,
+  // 오늘 이미 등록된 문구는 빼고 문구 기준으로 중복 없이 최신순 최대 6개. 탭하면 입력창에 채워준다.
+  const recentDoneSuggestions = useMemo(() => {
+    const cutoffKey = toDateKey(addDays(today, -9)); // 오늘 포함 10일
+    const todayTexts = new Set(todos.map((t) => t.text));
+    const seen = new Set();
+    const result = [];
+    const dateKeys = Object.keys(todosByDate).sort((a, b) => (a < b ? 1 : -1)); // 최신 날짜부터
+    for (const dateKey of dateKeys) {
+      if (dateKey < cutoffKey) continue;
+      for (const t of todosByDate[dateKey]) {
+        if (!isTodoComplete(t) || seen.has(t.text) || todayTexts.has(t.text)) continue;
+        seen.add(t.text);
+        result.push(t.text);
+        if (result.length >= 6) return result;
+      }
+    }
+    return result;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [todosByDate, selectedDate]);
 
   function setTodosForSelected(next) {
     setTodosByDate((prev) => ({ ...prev, [selectedDate]: next }));
@@ -638,6 +659,21 @@ export default function HomePage() {
               </div>
             )}
           </div>
+          {/* 최근 완료 할 일 추천 칩 — 최근 10일 내 완료했던 일만, 탭하면 입력창에 채워줌(바로 등록 X) */}
+          {recentDoneSuggestions.length > 0 && (
+            <div className="no-scrollbar -mx-4px flex gap-8px overflow-x-auto px-4px pt-12px">
+              {recentDoneSuggestions.map((text) => (
+                <button
+                  key={text}
+                  type="button"
+                  onClick={() => setInputText(text)}
+                  className="shrink-0 whitespace-nowrap rounded-full bg-bg-tint px-12px py-8px text-14 font-medium text-brand-pressed"
+                >
+                  {text}
+                </button>
+              ))}
+            </div>
+          )}
         </section>
 
         {/* 할 일 리스트 (TodoList) */}

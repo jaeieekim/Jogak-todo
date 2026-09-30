@@ -11,3 +11,12 @@
   user-select: none !important;
   -webkit-user-drag: none !important;
 }
+
+/* 가로 스크롤 칩 목록(추천 할 일 등)에서 스크롤바를 숨긴다 — 기능은 그대로, 시각적으로만 숨김 */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
