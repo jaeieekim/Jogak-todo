@@ -106,14 +106,12 @@ function Step2({ touched, onTouch, onLogin }) {
       </div>
 
       {/* Step1과 같은 구조(flex-1 콘텐츠 영역 + 고정 pb-48 버튼)라서 버튼은 항상 화면 맨 아래에 고정된다
-          — 이건 절대 안 바뀜. 화면이 길어질 때(사파리에서 확인된 기기별 차이) 생기는 여유 공간은
-          맨 위 spacer(flex-1)가 전부 흡수해서 헤드라인~젤리 사이로 가고, 젤리~버튼 사이 간격은
-          아래 고정 spacer(89px)로 항상 똑같이 유지된다. */}
-      {/* min-h-0 필수 — 없으면 flex-1이어도 이 안의 내용(젤리 뭉치)이 배정된 몫보다 커지려 할 때
-          그 몫을 무시하고 커져버려서, 실제 화면이 조금만 짧아져도(기기별 차이) 버튼이 밀려 내려간다
-          (사용자가 실제 아이폰에서 확인한 버그, 852/950 테스트 뷰포트에선 안 걸렸던 케이스). */}
+          — 이건 절대 안 바뀜. 화면이 길어질 때(기기별 차이) 생기는 여유 공간은 맨 아래(젤리~버튼 사이)
+          spacer가 전부 흡수한다 — spacer가 맨 위에 있으면 그 안의 모든 margin 조정이 상쇄돼버려서
+          (실측으로 확인된 버그) 일부러 맨 아래로 옮겼다. 이제 위쪽 요소들 margin은 그대로 반영된다.
+          min-h-0 필수 — 없으면 flex-1이어도 내용이 배정된 몫보다 커지려 할 때 그 몫을 무시하고
+          커져버려서 실제 화면이 짧으면(기기별 차이) 버튼이 밀려 내려간다. */}
       <div className="relative z-10 flex min-h-0 flex-1 flex-col items-center pt-24px">
-        <div className="flex-1" />
         <div
           className="relative z-20 flex flex-col items-center gap-4px transition-opacity duration-300"
           style={{ marginTop: 12, opacity: touched ? 0 : 1, visibility: touched ? 'hidden' : 'visible' }}
@@ -138,7 +136,7 @@ function Step2({ touched, onTouch, onLogin }) {
           <JellyCharacter src="/vault/jelly-blackcat.png" alt="검은고양이자리의 젤리 캐릭터" onInteract={onTouch} />
         </div>
 
-        <div className="relative z-10 text-center" style={{ marginTop: 8 }}>
+        <div className="relative z-10 text-center" style={{ marginTop: 4 }}>
           {/* 아래 두 텍스트 색은 Figma 원본 값 그대로(문서화된 예외) — 하단 크림 오버레이 위에서
               읽히도록 설계된 이 화면 전용 색이라 보관소 다크 토큰(무채/앰버)과는 다르다 */}
           <p className="text-vault-13" style={{ color: 'rgba(217,199,226,0.8)' }}>
@@ -161,7 +159,7 @@ function Step2({ touched, onTouch, onLogin }) {
         <p
           className="px-24px text-center text-24 font-bold leading-[1.4]"
           style={{
-            marginTop: 8,
+            marginTop: 4,
             backgroundImage: 'linear-gradient(180deg, #a25c1b 0%, #7b4717 25%, #55320f 50%, #1c130c 87.5%, #09080a 100%)',
             WebkitBackgroundClip: 'text',
             backgroundClip: 'text',
@@ -172,9 +170,9 @@ function Step2({ touched, onTouch, onLogin }) {
           <span className="block whitespace-nowrap">말랑이 처럼 만지고 놀아볼까요?</span>
         </p>
 
-        {/* 젤리~버튼 사이 간격 고정값(fixed, flex-grow 아님) — 화면이 아무리 길어져도 이 값은 안 바뀜.
-            버튼 자체는 항상 화면 맨 아래(pb-48)에 고정 — 이 spacer 크기와 무관하게 절대 안 움직임. */}
-        <div style={{ height: 64 }} />
+        {/* 젤리~버튼 사이 간격 — 최소 64px 보장하고, 화면이 길어지면 남는 공간을 여기서 흡수한다.
+            버튼 자체는 항상 화면 맨 아래(pb-40)에 고정 — 이 spacer 크기와 무관하게 절대 안 움직임. */}
+        <div className="flex-1" style={{ minHeight: 64 }} />
       </div>
 
       {/* Step1의 버튼 wrapper와 클래스/스타일 동일 — 버튼 위치를 두 화면에서 정확히 맞추기 위함 */}
