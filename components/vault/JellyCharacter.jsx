@@ -16,6 +16,10 @@ export default function JellyCharacter({ src, alt, tint, onInteract }) {
   const drag = useRef(null);
 
   const down = (e) => {
+    // iOS 사파리는 "누르고 있는 시간"만으로 이미지 저장 메뉴를 띄우려 하는데, CSS(touch-callout)만으론
+    // 못 막을 때가 있어서 터치 시작 시점에 기본 동작 자체를 막는다(이 요소는 touch-none이라 스크롤 등
+    // 다른 기본 동작과 충돌 없음).
+    e.preventDefault();
     e.target.setPointerCapture?.(e.pointerId);
     drag.current = { sx: e.clientX, sy: e.clientY, ox: pos.x, oy: pos.y, moved: 0 };
     setHeld(true);
