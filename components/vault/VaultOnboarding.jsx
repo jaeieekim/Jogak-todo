@@ -109,7 +109,10 @@ function Step2({ touched, onTouch, onLogin }) {
           — 이건 절대 안 바뀜. 화면이 길어질 때(사파리에서 확인된 기기별 차이) 생기는 여유 공간은
           맨 위 spacer(flex-1)가 전부 흡수해서 헤드라인~젤리 사이로 가고, 젤리~버튼 사이 간격은
           아래 고정 spacer(89px)로 항상 똑같이 유지된다. */}
-      <div className="relative z-10 flex flex-1 flex-col items-center pt-24px">
+      {/* min-h-0 필수 — 없으면 flex-1이어도 이 안의 내용(젤리 뭉치)이 배정된 몫보다 커지려 할 때
+          그 몫을 무시하고 커져버려서, 실제 화면이 조금만 짧아져도(기기별 차이) 버튼이 밀려 내려간다
+          (사용자가 실제 아이폰에서 확인한 버그, 852/950 테스트 뷰포트에선 안 걸렸던 케이스). */}
+      <div className="relative z-10 flex min-h-0 flex-1 flex-col items-center pt-24px">
         <div className="flex-1" />
         <div
           className="relative z-20 flex flex-col items-center gap-4px transition-opacity duration-300"
