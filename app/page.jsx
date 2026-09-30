@@ -32,6 +32,8 @@ import {
   wasOnboardingSeen,
   wasFirstJellyShown,
   markFirstJellyShown,
+  wasCarryoverSeenToday,
+  markCarryoverSeenToday,
 } from '../lib/storage';
 
 // ---------- 날짜 유틸 ----------
@@ -238,6 +240,86 @@ export default function HomePage() {
 
   function setTodosForSelected(next) {
     setTodosByDate((prev) => ({ ...prev, [selectedDate]: next }));
+  }
+
+  // ---------- 이어가기(V1.3, 가벼운 버전) ----------
+  // 대상: 오늘 제외 최근 3일(어제~3일 전)의 미완료 할 일, 최신순(어제 것부터) 최대 4개.
+  // 오늘 화면을 보고 있을 때만 의미가 있어서 selectedDate가 오늘일 때만 계산한다.
+  const todayKeyForCarryover = toDateKey(today);
+  const carryoverCandidates = useMemo(() => {
+    if (selectedDate !== todayKeyForCarryover) return [];
+    const result = [];
+    for (let n = 1; n <= 3; n++) {
+      const dateKey = toDateKey(addDays(today, -n));
+      for (const t of todosByDate[dateKey] || []) {
+        if (!isTodoComplete(t)) result.push({ dateKey, todo: t });
+      }
+    }
+    return result.slice(0, 4);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [todosByDate, selectedDate]);
+
+  // 화면에 아직 남아있는(선택 안 한) 칩들 — 박스가 열릴 때 후보로 채우고, 선택할 때마다 하나씩 줄어든다.
+  const [carryoverVisible, setCarryoverVisible] = useState(null); // null=아직 판단 전, []=없음/다 끝남, [...]=노출 중
+  const [carryoverLoadingKey, setCarryoverLoadingKey] = useState(null); // `${dateKey}:${todoId}` 생성 중인 칩
+
+  useEffect(() => {
+    if (!loaded || carryoverVisible !== null) return; // 최초 1회만 판단
+    if (carryoverCandidates.length === 0 || wasCarryoverSeenToday(todayKeyForCarryover)) {
+      setCarryoverVisible([]);
+      return;
+    }
+    setCarryoverVisible(carryoverCandidates);
+    track(EVENTS.CARRYOVER_SHOWN, { chip_count: carryoverCandidates.length });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loaded, carryoverCandidates]);
+
+  async function consumeCarryoverItem(dateKey, todo) {
+    const key = `${dateKey}:${todo.id}`;
+    setCarryoverLoadingKey(key);
+    track(EVENTS.CARRYOVER_CHIP_CLICK, { source_date: dateKey });
+
+    let result;
+    try {
+      const candidates = sampleStrategies(3, todo.lastStrategy);
+      const [generated] = await Promise.all([generateSteps(todo.text, candidates), sleep(MIN_LOADING_MS)]);
+      result = generated;
+    } catch (err) {
+      setCarryoverLoadingKey(null);
+      showToast(err instanceof GenerateStepsError ? err.message : '잠깐 삐끗했어요. 한 번만 다시 눌러줄래요?');
+      return;
+    }
+
+    const newTodo = {
+      id: crypto.randomUUID(),
+      text: todo.text,
+      date: todayKeyForCarryover,
+      steps: result.ministeps.map((s) => ({
+        id: crypto.randomUUID(),
+        text: s.text,
+        minutes: s.minutes,
+        checked: false,
+        checkedAt: null,
+      })),
+      originalChecked: false,
+      lastStrategy: result.strategy,
+    };
+    // 원본(예전 날짜)은 그대로 두고, 오늘 날짜에 새 할 일로 복사해서 추가 — 오늘 보고 있는 화면 기준이라 todos/setTodosForSelected 그대로 사용 가능
+    setTodosForSelected([newTodo, ...todos]);
+    track(EVENTS.MINISTEP_GENERATED, { strategy: result.strategy });
+
+    setCarryoverLoadingKey(null);
+    setCarryoverVisible((prev) => {
+      const next = prev.filter((c) => !(c.dateKey === dateKey && c.todo.id === todo.id));
+      if (next.length === 0) markCarryoverSeenToday(todayKeyForCarryover); // 마지막 칩까지 고르면 오늘은 끝
+      return next;
+    });
+  }
+
+  function dismissCarryover() {
+    markCarryoverSeenToday(todayKeyForCarryover);
+    setCarryoverVisible([]);
+    track(EVENTS.CARRYOVER_DISMISS, {});
   }
 
   // ---------- 토스트 ----------
@@ -678,6 +760,40 @@ export default function HomePage() {
 
         {/* 할 일 리스트 (TodoList) */}
         <section className="px-20px pt-20px">
+          {/* 이어가기(V1.3) — 날짜 바뀐 뒤 첫 접속 때만, 최근 3일 내 미완료 할 일을 칩으로 재노출 */}
+          {carryoverVisible && carryoverVisible.length > 0 && (
+            <div className="relative mb-24px rounded-12 bg-bg-tint px-20px py-20px">
+              <button
+                type="button"
+                aria-label="닫기"
+                onClick={dismissCarryover}
+                className="absolute right-12px top-12px flex h-24px w-24px items-center justify-center rounded-8 text-text-dim transition duration-[96ms] ease-out active:scale-[0.98]"
+              >
+                <CloseIcon size={16} />
+              </button>
+              <p className="pr-24px text-15 font-medium text-text-primary">
+                <span className="text-status-warning">✦</span> 잠깐, 아직 남은 할 일이 있어요. 어떤 것을 이어서
+                할까요?
+              </p>
+              <div className="no-scrollbar -mx-4px mt-12px flex gap-8px overflow-x-auto px-4px">
+                {carryoverVisible.map(({ dateKey, todo }) => {
+                  const key = `${dateKey}:${todo.id}`;
+                  const loading = carryoverLoadingKey === key;
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      disabled={carryoverLoadingKey !== null}
+                      onClick={() => consumeCarryoverItem(dateKey, todo)}
+                      className="shrink-0 whitespace-nowrap rounded-full bg-bg-default px-12px py-8px text-14 font-medium text-brand-pressed disabled:opacity-60"
+                    >
+                      {loading ? '쪼개는 중…' : todo.text}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
           <h2 className="pb-24px text-17 font-medium text-text-secondary">{listTitle}</h2>
           {todos.length === 0 ? null : (
             <ul className="flex flex-col gap-12px">
