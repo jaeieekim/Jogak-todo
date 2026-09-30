@@ -53,7 +53,7 @@ function Step1({ onNext }) {
           auto-wrap될 수 있고, 그러면 헤드라인 높이가 변해서 아래 버튼 위치까지 밀린다(1·2단계 버튼
           높낮이 달랐던 진짜 원인). 강제로 2줄 고정. */}
       <h1
-        className="relative z-10 px-24px pt-[100px] text-center text-32 font-semibold"
+        className="relative z-10 px-24px pt-[64px] text-center text-32 font-semibold"
         style={{ color: 'var(--color-vault-foreground)' }}
       >
         <span className="block whitespace-nowrap">별 조각을 모아서</span>
@@ -90,7 +90,7 @@ function Step2({ touched, onTouch, onLogin }) {
       />
 
       <h1
-        className="relative z-10 px-24px pt-[100px] text-center text-32 font-semibold"
+        className="relative z-10 px-24px pt-[64px] text-center text-32 font-semibold"
         style={{ color: 'var(--color-vault-foreground)' }}
       >
         <span className="block whitespace-nowrap">별자리를 만들면</span>
