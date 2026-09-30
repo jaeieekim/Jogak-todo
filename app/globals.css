@@ -1,3 +1,13 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* 아이폰 사파리에서 이미지를 길게 누르면 뜨는 "저장/공유/복사" 메뉴 차단.
+   React 인라인 style로도 넣어봤지만(JellyCharacter.jsx) 실제 아이폰에서 계속 뜬다는 리포트가 있어
+   전역 클래스로 한 번 더 확실하게 건다 — !important로 다른 스타일에 덮이지 않게 한다. */
+.no-ios-callout {
+  -webkit-touch-callout: none !important;
+  -webkit-user-select: none !important;
+  user-select: none !important;
+  -webkit-user-drag: none !important;
+}

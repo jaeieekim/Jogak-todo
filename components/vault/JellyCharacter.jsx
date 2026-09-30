@@ -81,7 +81,7 @@ export default function JellyCharacter({ src, alt, tint, onInteract }) {
           onPointerMove={move}
           onPointerUp={up}
           onPointerCancel={up}
-          className="block w-full touch-none select-none cursor-grab active:cursor-grabbing"
+          className="no-ios-callout block w-full touch-none select-none cursor-grab active:cursor-grabbing"
           style={{
             transformOrigin: `${tap.x}% ${tap.y}%`,
             transform: held ? `rotate(${angle}deg) scale(${1 + stretch}, ${1 - stretch})` : undefined,
