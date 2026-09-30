@@ -134,11 +134,11 @@ function Step2({ touched, onTouch, onLogin }) {
         {/* marginTop 음수로 Touch 아이콘과 젤리 머리가 겹치게(Figma 그대로). JellyCharacter는 내부에서
             이미지를 56px 아래로 눌러 그리는데 이 transform은 레이아웃 높이에 안 잡혀서 다음 요소(캡션)와
             겹친다 — paddingBottom 56으로 정확히 상쇄. */}
-        <div className="w-full" style={{ marginTop: -134, paddingBottom: 56 }}>
+        <div className="w-full" style={{ marginTop: -138, paddingBottom: 56 }}>
           <JellyCharacter src="/vault/jelly-blackcat.png" alt="검은고양이자리의 젤리 캐릭터" onInteract={onTouch} />
         </div>
 
-        <div className="relative z-10 text-center" style={{ marginTop: 16 }}>
+        <div className="relative z-10 text-center" style={{ marginTop: 8 }}>
           {/* 아래 두 텍스트 색은 Figma 원본 값 그대로(문서화된 예외) — 하단 크림 오버레이 위에서
               읽히도록 설계된 이 화면 전용 색이라 보관소 다크 토큰(무채/앰버)과는 다르다 */}
           <p className="text-vault-13" style={{ color: 'rgba(217,199,226,0.8)' }}>
@@ -161,7 +161,7 @@ function Step2({ touched, onTouch, onLogin }) {
         <p
           className="px-24px text-center text-24 font-bold leading-[1.4]"
           style={{
-            marginTop: 16,
+            marginTop: 8,
             backgroundImage: 'linear-gradient(180deg, #a25c1b 0%, #7b4717 25%, #55320f 50%, #1c130c 87.5%, #09080a 100%)',
             WebkitBackgroundClip: 'text',
             backgroundClip: 'text',
