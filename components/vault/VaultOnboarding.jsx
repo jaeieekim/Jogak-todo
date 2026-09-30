@@ -67,7 +67,7 @@ function Step1({ onNext }) {
         </p>
       </div>
 
-      <div className="relative z-10 px-24px" style={{ paddingBottom: '48px' }}>
+      <div className="relative z-10 px-24px" style={{ paddingBottom: '40px' }}>
         <button type="button" onClick={onNext} className={CTA_BUTTON_CLASS} style={CTA_BUTTON_STYLE}>
           별 조각 받고 계속하기
         </button>
@@ -178,7 +178,7 @@ function Step2({ touched, onTouch, onLogin }) {
       </div>
 
       {/* Step1의 버튼 wrapper와 클래스/스타일 동일 — 버튼 위치를 두 화면에서 정확히 맞추기 위함 */}
-      <div className="relative z-10 px-24px" style={{ paddingBottom: '48px' }}>
+      <div className="relative z-10 px-24px" style={{ paddingBottom: '40px' }}>
         <button type="button" onClick={onLogin} className={CTA_BUTTON_CLASS} style={CTA_BUTTON_STYLE}>
           로그인하고 캐릭터 젤리 받기
         </button>
