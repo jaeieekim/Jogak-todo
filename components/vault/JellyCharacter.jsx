@@ -92,6 +92,9 @@ export default function JellyCharacter({ src, alt, tint, onInteract }) {
                 : 'vault-squish-idle 3.4s ease-in-out infinite',
             filter: `${tint ? tint + ' ' : ''}drop-shadow(0 18px 40px color-mix(in srgb, var(--color-vault-black) 55%, transparent)) drop-shadow(0 0 26px color-mix(in srgb, var(--color-vault-amber) 25%, transparent))`,
             WebkitUserSelect: 'none',
+            // iOS 사파리는 user-select만으론 안 막히고 이 속성을 따로 꺼야 길게 눌렀을 때
+            // "이미지 저장/공유/복사" 메뉴가 안 뜬다
+            WebkitTouchCallout: 'none',
           }}
         />
         {punch > 0 && (
