@@ -183,7 +183,7 @@ export default function Galaxy({ data, onOpen }) {
       </div>
 
       {/* 하단: 시작한 날 / 모은 조각 — 하단 내비게이션 바(56px)와 겹치지 않게 그 위에 둠 */}
-      <div className="pointer-events-none absolute inset-x-0 z-20 flex items-center justify-between px-5" style={{ bottom: 'calc(56px + 12px + env(safe-area-inset-bottom))' }}>
+      <div className="pointer-events-none absolute inset-x-0 z-20 flex items-center justify-between px-5" style={{ bottom: 'calc(56px + 16px + env(safe-area-inset-bottom))' }}>
         <div
           className="rounded-full px-3.5 py-1.5 text-vault-13 font-medium backdrop-blur-md"
           style={{ background: 'color-mix(in srgb, var(--color-vault-sky-mid) 60%, transparent)', border: '1px solid color-mix(in srgb, var(--color-vault-white) 8%, transparent)', color: 'var(--color-vault-foreground)' }}
