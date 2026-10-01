@@ -54,7 +54,8 @@ export default function EncouragementCard({ card, onClose }) {
             style={{ filter: 'drop-shadow(0 0 32px rgba(255,255,255,0.75))' }}
           />
 
-          <p className="text-24 font-bold leading-[1.4] text-text-primary text-center">{card.quote}</p>
+          {/* 명언에 \n이 있으면(피그마 원본의 수동 줄바꿈 지점) 그 자리에서만 줄바꿈 — 없으면 자동 줄바꿈 */}
+          <p className="whitespace-pre-line text-24 font-bold leading-[1.4] text-text-primary text-center">{card.quote}</p>
         </div>
       </div>
     </div>
