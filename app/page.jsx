@@ -67,6 +67,14 @@ function remainingSteps(todo) {
   return todo.steps.length - todo.steps.filter((s) => s.checked).length;
 }
 
+// 개발용 미리보기: /?carryoverDemo=1 — 실제 로컬스토리지 상태와 무관하게 이어가기 박스를 항상 고정된 예시로 보여준다.
+// 디자인 확인·캡처용(보관소의 ?preview=full과 동일한 목적). 실제 유저 데이터는 전혀 건드리지 않는다.
+const DEMO_CARRYOVER_CANDIDATES = [
+  { dateKey: 'demo', todo: { id: 'demo-1', text: '단어외우기', steps: [{ checked: true }, { checked: true }, { checked: false }], originalChecked: false } },
+  { dateKey: 'demo', todo: { id: 'demo-2', text: '방 청소하기', steps: [{ checked: true }, { checked: false }, { checked: false }], originalChecked: false } },
+  { dateKey: 'demo', todo: { id: 'demo-3', text: '책상에 앉아서 영어 교재 펼치기', steps: [{ checked: false }, { checked: false }, { checked: false }, { checked: false }], originalChecked: false } },
+];
+
 // 로딩 연출 최소 노출 시간 — 생성이 순식간에 끝나도 연출이 인지되도록 보장 (md 섹션 7-1).
 // 생성 결과 내용에는 영향을 주지 않고 성공 노출 시점만 지연한다.
 const MIN_LOADING_MS = 700;
@@ -122,7 +130,8 @@ export default function HomePage() {
   // ---------- 첫 방문 온보딩 게이트 + 앱 진입 처리 ----------
   useEffect(() => {
     trackAppOpenOnce(); // 세션당 1회 (새로고침에는 다시 안 찍힘)
-    const goingToOnboarding = !wasOnboardingSeen();
+    const carryoverDemo = new URLSearchParams(window.location.search).get('carryoverDemo') === '1';
+    const goingToOnboarding = !carryoverDemo && !wasOnboardingSeen();
 
     (async () => {
       await ensureJellyAccount(); // 앱 진입 시 익명 계정 자동 생성 + 보너스 판정
@@ -272,6 +281,10 @@ export default function HomePage() {
 
   useEffect(() => {
     if (!loaded || carryoverVisible !== null) return; // 최초 1회만 판단
+    if (new URLSearchParams(window.location.search).get('carryoverDemo') === '1') {
+      setCarryoverVisible(DEMO_CARRYOVER_CANDIDATES);
+      return;
+    }
     if (carryoverCandidates.length === 0 || wasCarryoverSeenToday(todayKeyForCarryover)) {
       setCarryoverVisible([]);
       return;
@@ -774,23 +787,25 @@ export default function HomePage() {
         <section className="px-20px pt-20px">
           {/* 이어가기(V1.3) — 날짜 바뀐 뒤 첫 접속 때만, 최근 3일 내 미완료 할 일을 칩으로 재노출 */}
           {carryoverVisible && carryoverVisible.length > 0 && (
-            <div className="relative mb-24px rounded-12 bg-bg-tint px-20px py-20px">
-              <button
-                type="button"
-                aria-label="닫기"
-                onClick={dismissCarryover}
-                className="absolute right-12px top-12px flex h-24px w-24px items-center justify-center rounded-8 text-text-dim transition duration-[96ms] ease-out active:scale-[0.98]"
-              >
-                <CloseIcon size={16} />
-              </button>
-              <p className="pr-24px text-15 font-medium text-text-primary">
-                <span className="text-status-warning">✦</span> 잠깐, 아직 남은 할 일이 있어요. 이어서
-                해볼까요?
-              </p>
-              <p className="pr-24px text-14 font-normal text-text-muted">
+            <div className="mb-24px rounded-12 bg-bg-tint px-20px py-20px">
+              <div className="flex items-start justify-between gap-8px">
+                <p className="text-15 font-medium text-text-primary">
+                  <span className="text-status-warning">✦</span> 잠깐, 아직 남은 할 일이 있어요.{' '}
+                  <span className="whitespace-nowrap">이어서 해볼까요?</span>
+                </p>
+                <button
+                  type="button"
+                  aria-label="닫기"
+                  onClick={dismissCarryover}
+                  className="flex h-24px w-24px shrink-0 items-center justify-center rounded-8 text-text-dim transition duration-[96ms] ease-out active:scale-[0.98]"
+                >
+                  <CloseIcon size={16} />
+                </button>
+              </div>
+              <p className="text-14 font-normal text-text-muted">
                 남은 일은 조금이에요. 이어갈 수 있도록 응원해줄게요!
               </p>
-              <div className="no-scrollbar -mx-4px mt-12px flex gap-8px overflow-x-auto px-4px">
+              <div className="mt-12px flex flex-wrap gap-8px">
                 {carryoverVisible.map(({ dateKey, todo }) => {
                   const key = `${dateKey}:${todo.id}`;
                   const loading = carryoverLoadingKey === key;
