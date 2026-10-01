@@ -113,13 +113,11 @@ export default function ConstellationDetail({ c, onBack }) {
         aria-label="공유하기 (준비 중)"
       >
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-          <path
-            d="M18 8a3 3 0 10-2.83-4M18 8a3 3 0 01-2.83-2M18 8l-9 4m0 0a3 3 0 100 4m0-4a3 3 0 010 4m0 0l9 4m0 0a3 3 0 102.83 2M15 20a3 3 0 012.83-2"
-            stroke="var(--color-vault-foreground)"
-            strokeWidth="1.6"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
+          <circle cx="18" cy="5" r="3" stroke="var(--color-vault-foreground)" strokeWidth="1.6" />
+          <circle cx="6" cy="12" r="3" stroke="var(--color-vault-foreground)" strokeWidth="1.6" />
+          <circle cx="18" cy="19" r="3" stroke="var(--color-vault-foreground)" strokeWidth="1.6" />
+          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" stroke="var(--color-vault-foreground)" strokeWidth="1.6" strokeLinecap="round" />
+          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" stroke="var(--color-vault-foreground)" strokeWidth="1.6" strokeLinecap="round" />
         </svg>
       </button>
     </div>
