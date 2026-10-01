@@ -13,8 +13,8 @@ import { loadConstellationDays } from '../../lib/vaultData';
 // 별자리별 캐릭터 젤리 이미지 — 아직 전용 이미지가 없는 별자리는 기본(검은고양이)을 재사용.
 // 새 이미지가 생기면 이 매핑에 한 줄만 추가하면 된다. 항상 JellyCharacter를 통해서만 그리므로
 // (아래 렌더링부 참조) 드래그·탭 인터랙션은 이미지를 바꿀 때마다 별도 요청 없이 자동으로 적용된다.
-const JELLY_SRC_DEFAULT = '/vault/jelly-blackcat.png';
-const JELLY_SRC_BY_KEY = {
+export const JELLY_SRC_DEFAULT = '/vault/jelly-blackcat.png';
+export const JELLY_SRC_BY_KEY = {
   chick: '/vault/jelly-chick.png',
   sheep: '/vault/jelly-sheep.png',
   capybara: '/vault/jelly-capybara.png',

@@ -9,6 +9,8 @@ import WeekStrip from '../components/WeekStrip';
 import MascotSpeechBubble from '../components/MascotSpeechBubble';
 import BottomNav from '../components/BottomNav';
 import JellyPopup from '../components/JellyPopup';
+import EncouragementCard from '../components/EncouragementCard';
+import { ENCOURAGEMENT_CARDS } from '../lib/encouragementCards';
 import {
   getMascotState,
   MASCOT_STATE,
@@ -34,6 +36,8 @@ import {
   markFirstJellyShown,
   wasCarryoverSeenToday,
   markCarryoverSeenToday,
+  wasEncouragementCardShown,
+  markEncouragementCardShown,
 } from '../lib/storage';
 
 // ---------- 날짜 유틸 ----------
@@ -278,6 +282,8 @@ export default function HomePage() {
   // 화면에 아직 남아있는(선택 안 한) 칩들 — 박스가 열릴 때 후보로 채우고, 선택할 때마다 하나씩 줄어든다.
   const [carryoverVisible, setCarryoverVisible] = useState(null); // null=아직 판단 전, []=없음/다 끝남, [...]=노출 중
   const [carryoverLoadingKey, setCarryoverLoadingKey] = useState(null); // `${dateKey}:${todoId}` 생성 중인 칩
+  const [carryoverFlip, setCarryoverFlip] = useState(false); // 칩 선택 성공 시 박스가 한 바퀴 도는 피드백(매번)
+  const [encouragementCard, setEncouragementCard] = useState(null); // 이어가기 응원카드 — 최초 1회만
 
   useEffect(() => {
     if (!loaded || carryoverVisible !== null) return; // 최초 1회만 판단
@@ -334,6 +340,16 @@ export default function HomePage() {
       if (next.length === 0) markCarryoverSeenToday(todayKeyForCarryover); // 마지막 칩까지 고르면 오늘은 끝
       return next;
     });
+
+    // 칩을 성공적으로 골랐을 때 박스가 한 바퀴 도는 피드백 — 매번
+    setCarryoverFlip(true);
+    setTimeout(() => setCarryoverFlip(false), 600);
+
+    // 이어가기 응원카드 — 생애 최초 1회만, 플립이 어느 정도 돌아간 뒤 등장
+    if (!wasEncouragementCardShown()) {
+      markEncouragementCardShown();
+      setTimeout(() => setEncouragementCard(ENCOURAGEMENT_CARDS[0]), 350);
+    }
   }
 
   function dismissCarryover() {
@@ -787,7 +803,13 @@ export default function HomePage() {
         <section className="px-20px pt-20px">
           {/* 이어가기(V1.3) — 날짜 바뀐 뒤 첫 접속 때만, 최근 3일 내 미완료 할 일을 칩으로 재노출 */}
           {carryoverVisible && carryoverVisible.length > 0 && (
-            <div className="mb-24px rounded-12 bg-bg-tint px-20px py-20px">
+            <div
+              className="mb-24px rounded-12 bg-bg-tint px-20px py-20px"
+              style={{
+                transform: `perspective(800px) rotateY(${carryoverFlip ? 360 : 0}deg)`,
+                transition: carryoverFlip ? 'transform 0.6s ease' : 'none',
+              }}
+            >
               <div className="flex items-start justify-between gap-8px">
                 <p className="text-15 font-medium text-text-primary">
                   <span className="text-status-warning">✦</span> 잠깐, 아직 남은 할 일이 있어요.{' '}
@@ -920,6 +942,11 @@ export default function HomePage() {
             {toast}
           </div>
         </div>
+      )}
+
+      {/* 이어가기 응원카드 (V1.3) — 생애 최초 1회만 */}
+      {encouragementCard && (
+        <EncouragementCard card={encouragementCard} onClose={() => setEncouragementCard(null)} />
       )}
 
       {/* 젤리 획득/보너스/별자리 완성 팝업 (V1.0 M3) */}
