@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import TodoCard from '../components/TodoCard';
+import TodoCard, { ProgressDots } from '../components/TodoCard';
 import Button from '../components/Button';
 import WeekStrip from '../components/WeekStrip';
 import MascotSpeechBubble from '../components/MascotSpeechBubble';
@@ -60,6 +60,11 @@ function addDays(d, n) {
 // ---------- 완수 판정 ----------
 function isTodoComplete(todo) {
   return todo.steps.every((s) => s.checked) && todo.originalChecked;
+}
+
+// 남은 미니스텝 개수 — 메인 할 일 체크는 제외하고 스텝 기준으로만 센다 (이어가기 정렬·진행 도트용)
+function remainingSteps(todo) {
+  return todo.steps.length - todo.steps.filter((s) => s.checked).length;
 }
 
 // 로딩 연출 최소 노출 시간 — 생성이 순식간에 끝나도 연출이 인지되도록 보장 (md 섹션 7-1).
@@ -255,6 +260,8 @@ export default function HomePage() {
         if (!isTodoComplete(t)) result.push({ dateKey, todo: t });
       }
     }
+    // 미니스텝이 가장 적게 남은 것부터 — 조금만 더 하면 끝나는 걸 먼저 보여준다
+    result.sort((a, b) => remainingSteps(a.todo) - remainingSteps(b.todo));
     return result.slice(0, 4);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [todosByDate, selectedDate]);
@@ -607,10 +614,15 @@ export default function HomePage() {
   const [selectedYear, selectedMonth, selectedDay] = selectedDate.split('-').map(Number);
   const weekHeaderLabel = `${selectedYear}년 ${selectedMonth}월 ${selectedDay}일`;
 
+  // ---------- 할 일 리스트 분리 ----------
+  // 메인 할 일 체크까지 끝난 것만 완료 섹션으로. 미니스텝만 다 하고 메인 체크 전이면 그대로 오늘 할 일에 남는다.
+  const incompleteTodos = todos.filter((t) => !isTodoComplete(t));
+  const completedTodos = todos.filter((t) => isTodoComplete(t));
+
   // ---------- 할 일 리스트 제목 ----------
   const listTitle =
     (selectedDate === todayKey ? '오늘 할 일' : `${selectedMonth}월 ${selectedDay}일 할 일`) +
-    ` ${todos.length}개`;
+    ` ${incompleteTodos.length}개`;
 
   // ---------- 생애 첫 완수 별점 피드백 팝업 ----------
   function closeFirstFeedbackPopup() {
@@ -772,22 +784,33 @@ export default function HomePage() {
                 <CloseIcon size={16} />
               </button>
               <p className="pr-24px text-15 font-medium text-text-primary">
-                <span className="text-status-warning">✦</span> 잠깐, 아직 남은 할 일이 있어요. 어떤 것을 이어서
-                할까요?
+                <span className="text-status-warning">✦</span> 잠깐, 아직 남은 할 일이 있어요. 이어서
+                해볼까요?
+              </p>
+              <p className="pr-24px text-14 font-normal text-text-muted">
+                남은 일은 조금이에요. 이어갈 수 있도록 응원해줄게요!
               </p>
               <div className="no-scrollbar -mx-4px mt-12px flex gap-8px overflow-x-auto px-4px">
                 {carryoverVisible.map(({ dateKey, todo }) => {
                   const key = `${dateKey}:${todo.id}`;
                   const loading = carryoverLoadingKey === key;
+                  const checkedSteps = todo.steps.filter((s) => s.checked).length;
                   return (
                     <button
                       key={key}
                       type="button"
                       disabled={carryoverLoadingKey !== null}
                       onClick={() => consumeCarryoverItem(dateKey, todo)}
-                      className="shrink-0 whitespace-nowrap rounded-full bg-bg-default px-12px py-8px text-14 font-medium text-brand-pressed disabled:opacity-60"
+                      className="flex shrink-0 items-center gap-4px whitespace-nowrap rounded-full bg-bg-default px-12px py-8px text-14 font-medium text-brand-pressed disabled:opacity-60"
                     >
-                      {loading ? '쪼개는 중…' : todo.text}
+                      {loading ? (
+                        '쪼개는 중…'
+                      ) : (
+                        <>
+                          {todo.text}
+                          <ProgressDots filled={checkedSteps} total={todo.steps.length} />
+                        </>
+                      )}
                     </button>
                   );
                 })}
@@ -795,15 +818,10 @@ export default function HomePage() {
             </div>
           )}
           <h2 className="pb-24px text-17 font-medium text-text-secondary">{listTitle}</h2>
-          {todos.length === 0 ? null : (
+          {incompleteTodos.length === 0 ? null : (
             <ul className="flex flex-col gap-12px">
-              {todos.map((todo) => {
-                const checkedItems =
-                  todo.steps.filter((s) => s.checked).length + (todo.originalChecked ? 1 : 0);
-                const totalItems = todo.steps.length + 1;
+              {incompleteTodos.map((todo) => {
                 const isEditing = editModeId === todo.id;
-                const isComplete = checkedItems === totalItems;
-                const isCollapsed = isComplete && !expandedCompletedIds.has(todo.id);
 
                 return (
                   <TodoCard
@@ -822,8 +840,8 @@ export default function HomePage() {
                     onDelete={deleteTodo}
                     onToggleStep={toggleStep}
                     onToggleOriginal={toggleOriginal}
-                    isCollapsed={isCollapsed}
-                    isComplete={isComplete}
+                    isCollapsed={false}
+                    isComplete={false}
                     onToggleCollapse={toggleCompletedCard}
                     draggable={!isEditing}
                     onDragStart={() => setDragId(todo.id)}
@@ -833,6 +851,46 @@ export default function HomePage() {
                 );
               })}
             </ul>
+          )}
+
+          {/* 완료한 할 일 — 메인 할 일 체크까지 끝난 것만. 스텝만 다 하고 메인 체크 전이면 위 "오늘 할 일"에 그대로 남는다. */}
+          {completedTodos.length > 0 && (
+            <div className="pt-32px">
+              <h2 className="pb-24px text-17 font-medium text-text-secondary">완료한 할 일 {completedTodos.length}개</h2>
+              <ul className="flex flex-col gap-12px">
+                {completedTodos.map((todo) => {
+                  const isEditing = editModeId === todo.id;
+                  const isCollapsed = !expandedCompletedIds.has(todo.id);
+
+                  return (
+                    <TodoCard
+                      key={todo.id}
+                      todo={todo}
+                      isMenuOpen={menuOpenId === todo.id}
+                      onToggleMenu={toggleMenu}
+                      onCloseMenu={closeMenu}
+                      isEditing={isEditing}
+                      onStartEdit={startEdit}
+                      onFinishEdit={finishEdit}
+                      onEditStepText={editStepText}
+                      onEditOriginalText={editOriginalText}
+                      onResplit={resplitTodo}
+                      isResplitting={resplittingId === todo.id}
+                      onDelete={deleteTodo}
+                      onToggleStep={toggleStep}
+                      onToggleOriginal={toggleOriginal}
+                      isCollapsed={isCollapsed}
+                      isComplete
+                      onToggleCollapse={toggleCompletedCard}
+                      draggable={!isEditing}
+                      onDragStart={() => setDragId(todo.id)}
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={() => handleDrop(todo.id)}
+                    />
+                  );
+                })}
+              </ul>
+            </div>
           )}
         </section>
       </div>

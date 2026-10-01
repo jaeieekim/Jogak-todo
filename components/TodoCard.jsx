@@ -214,7 +214,7 @@ function ResplitLoader() {
   );
 }
 
-function ProgressDots({ filled, total }) {
+export function ProgressDots({ filled, total }) {
   return (
     <span className="flex shrink-0 items-center gap-4px" aria-label={`${filled}/${total} 완료`}>
       {Array.from({ length: total }, (_, i) => (
