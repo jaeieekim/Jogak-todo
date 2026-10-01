@@ -9,6 +9,8 @@ import ConstellationGlyph from './ConstellationGlyph';
 import JellyCharacter from './JellyCharacter';
 import Starfield from './Starfield';
 import { loadConstellationDays } from '../../lib/vaultData';
+import { getOrCreateInviteCode } from '../../lib/jelly';
+import { track, EVENTS } from '../../lib/mixpanel';
 
 // 별자리별 캐릭터 젤리 이미지 — 아직 전용 이미지가 없는 별자리는 기본(검은고양이)을 재사용.
 // 새 이미지가 생기면 이 매핑에 한 줄만 추가하면 된다. 항상 JellyCharacter를 통해서만 그리므로
@@ -33,6 +35,36 @@ export const JELLY_SRC_BY_KEY = {
 
 export default function ConstellationDetail({ c, onBack }) {
   const [days, setDays] = useState(null);
+  const [shareState, setShareState] = useState('idle'); // 'idle' | 'sharing' | 'copied'
+
+  async function handleShare() {
+    if (shareState === 'sharing') return;
+    setShareState('sharing');
+    try {
+      const code = await getOrCreateInviteCode();
+      if (!code) {
+        setShareState('idle');
+        return;
+      }
+      const url = `${window.location.origin}/invite/${code}`;
+      track(EVENTS.INVITE_CREATED, { constellation_id: c.id });
+      if (navigator.share) {
+        await navigator.share({
+          title: '말랑말랑, 동물 젤리 선물이 도착했어요',
+          text: '알을 깨면 어떤 젤리가 나올까요?',
+          url,
+        });
+        setShareState('idle');
+      } else {
+        await navigator.clipboard.writeText(url);
+        setShareState('copied');
+        setTimeout(() => setShareState('idle'), 2000);
+      }
+    } catch {
+      // 공유 시트를 취소한 경우(AbortError 등) 포함 — 조용히 무시
+      setShareState('idle');
+    }
+  }
 
   useEffect(() => {
     let alive = true;
@@ -100,25 +132,32 @@ export default function ConstellationDetail({ c, onBack }) {
         </p>
       </div>
 
-      {/* 공유 버튼 — 자리만 확보 (PRD §5.3, V1.0 미구현) */}
+      {/* 공유 버튼 — 초대 링크 생성(유저당 고정 1개) 후 공유시트, 없으면 클립보드 복사 */}
       <button
         type="button"
-        disabled
-        className="absolute right-4 z-30 flex h-10 w-10 items-center justify-center rounded-full backdrop-blur-md opacity-60"
+        onClick={handleShare}
+        disabled={shareState === 'sharing'}
+        className="absolute right-4 z-30 flex h-10 w-10 items-center justify-center rounded-full backdrop-blur-md transition-transform active:scale-90"
         style={{
           top: 'calc(16px + env(safe-area-inset-top))',
           background: 'color-mix(in srgb, var(--color-vault-jelly-a) 18%, transparent)',
           border: '1px solid color-mix(in srgb, var(--color-vault-jelly-a) 40%, transparent)',
         }}
-        aria-label="공유하기 (준비 중)"
+        aria-label={shareState === 'copied' ? '링크가 복사됐어요' : '공유하기'}
       >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-          <circle cx="18" cy="5" r="3" stroke="var(--color-vault-foreground)" strokeWidth="1.6" />
-          <circle cx="6" cy="12" r="3" stroke="var(--color-vault-foreground)" strokeWidth="1.6" />
-          <circle cx="18" cy="19" r="3" stroke="var(--color-vault-foreground)" strokeWidth="1.6" />
-          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" stroke="var(--color-vault-foreground)" strokeWidth="1.6" strokeLinecap="round" />
-          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" stroke="var(--color-vault-foreground)" strokeWidth="1.6" strokeLinecap="round" />
-        </svg>
+        {shareState === 'copied' ? (
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M5 12.5L10 17.5L19 7" stroke="var(--color-vault-foreground)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        ) : (
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <circle cx="18" cy="5" r="3" stroke="var(--color-vault-foreground)" strokeWidth="1.6" />
+            <circle cx="6" cy="12" r="3" stroke="var(--color-vault-foreground)" strokeWidth="1.6" />
+            <circle cx="18" cy="19" r="3" stroke="var(--color-vault-foreground)" strokeWidth="1.6" />
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" stroke="var(--color-vault-foreground)" strokeWidth="1.6" strokeLinecap="round" />
+            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" stroke="var(--color-vault-foreground)" strokeWidth="1.6" strokeLinecap="round" />
+          </svg>
+        )}
       </button>
     </div>
   );

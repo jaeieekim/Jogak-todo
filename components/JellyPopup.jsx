@@ -55,6 +55,24 @@ export default function JellyPopup({ kind, count, isFirstEver, bonusType, conste
     );
   }
 
+  if (kind === 'gift_arrived') {
+    return (
+      <PopupShell onClose={onClose}>
+        <h2 className="text-center text-17 font-semibold text-text-primary">캐릭터 젤리 선물이 도착했어요</h2>
+        <p className="pt-8px text-center text-15 font-normal text-text-secondary">
+          내가 보낸 초대로 친구가 들어왔어요.
+          <br />
+          젤리를 받으러 가볼까요?
+        </p>
+        <div className="pt-24px">
+          <Button className="w-full" onClick={onView}>
+            선물 받으러 가기
+          </Button>
+        </div>
+      </PopupShell>
+    );
+  }
+
   if (kind === 'completed' || kind === 'login_bonus') {
     const headline = kind === 'login_bonus' ? '검은고양이 젤리를 받았어요!' : '별자리가 완성되었어요!';
     return (

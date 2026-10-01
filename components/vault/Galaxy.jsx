@@ -298,6 +298,18 @@ export default function Galaxy({ data, onOpen }) {
         >
           <span style={{ color: 'var(--color-vault-jelly-a)' }}>◎</span> {isCentered ? '최근 모은 별자리 보기' : '중앙으로 돌아가기'}
         </button>
+
+        {/* 자랑하기 유도 — 완성한 별자리가 하나도 없으면(자랑할 게 없으니) 숨김 */}
+        {latest && (
+          <button
+            type="button"
+            onClick={() => router.push(`/brag/${latest.catalogKey}`)}
+            className="pointer-events-auto rounded-full px-4 py-1.5 text-vault-12 font-medium transition-transform active:scale-95"
+            style={{ background: 'var(--color-vault-amber)', color: 'var(--color-vault-black)' }}
+          >
+            자랑하고 젤리 하나 더!
+          </button>
+        )}
       </div>
 
       {/* 하단: 시작한 날 / 모은 별자리 — 하단 내비게이션 바(56px)와 겹치지 않게 그 위에 둠 */}

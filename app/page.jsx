@@ -129,7 +129,7 @@ export default function HomePage() {
   const [loggedIn, setLoggedIn] = useState(false);
   // 첫 로그인 시 "로그인 선물"(별조각 3개)과 "검은고양이 젤리"(즉시 완성)가 같은 순간에 같이 지급될 수 있어서,
   // 겹치지 않게 하나 보여주고 닫히면 이어서 다음 걸 보여주는 큐
-  const nextJellyPopup = useRef(null);
+  const nextJellyPopup = useRef([]); // 뒤에 이어서 보여줄 팝업들(여러 개 겹칠 수 있음) — 앞에서부터 순서대로
 
   // ---------- 첫 방문 온보딩 게이트 + 앱 진입 처리 ----------
   useEffect(() => {
@@ -143,23 +143,30 @@ export default function HomePage() {
       if (goingToOnboarding) return; // 온보딩 마치고 돌아왔을 때(재마운트 시) 처리 — 지금 보여주면 곧바로 화면이 바뀌어 버림
       const appOpen = consumeAppOpenResult();
       if (!appOpen) return;
-      // 우선순위: 별자리 완성 > 첫/복귀 보너스(로그인 선물) > 로그인 보너스(검은고양이자리 즉시 완성)
-      // 첫 로그인 땐 보너스와 로그인 보너스가 같이 지급될 수 있어서, 뒤 순서는 큐에 담아뒀다가 이어서 보여준다
-      if (appOpen.login_jelly_granted) {
-        nextJellyPopup.current = { kind: 'login_bonus' };
-      }
+      // 우선순위: 별자리 완성 > 선물 도착(공유 보상) > 첫/복귀 보너스(로그인 선물) > 로그인 보너스(검은고양이자리 즉시 완성)
+      // 여러 개가 같은 순간에 겹칠 수 있어서(예: 첫 카카오 로그인과 동시에 선물도 와있는 경우) 전부 큐에 쌓고
+      // 맨 앞 것만 바로 보여준 뒤, 닫을 때마다 다음 것을 이어서 보여준다.
+      const queue = [];
       if (appOpen.completed?.length > 0) {
         const c = appOpen.completed[0];
-        setJellyPopup({ kind: 'completed', constellationName: c.name });
+        queue.push({ kind: 'completed', constellationName: c.name });
         trackConstellationComplete(c);
-      } else if (appOpen.bonus_granted) {
-        setJellyPopup({ kind: 'bonus', bonusType: appOpen.bonus_granted });
+      }
+      if (appOpen.referral_pending) {
+        queue.push({ kind: 'gift_arrived' });
+      }
+      if (appOpen.bonus_granted) {
+        queue.push({ kind: 'bonus', bonusType: appOpen.bonus_granted });
         if (appOpen.bonus_granted === 'comeback') {
           track(EVENTS.COMEBACK_BONUS_GRANTED, { days_away: appOpen.days_away });
         }
-      } else if (nextJellyPopup.current) {
-        setJellyPopup(nextJellyPopup.current);
-        nextJellyPopup.current = null;
+      }
+      if (appOpen.login_jelly_granted) {
+        queue.push({ kind: 'login_bonus' });
+      }
+      if (queue.length > 0) {
+        setJellyPopup(queue[0]);
+        nextJellyPopup.current = queue.slice(1);
       }
     })();
 
@@ -954,18 +961,21 @@ export default function HomePage() {
         <JellyPopup
           {...jellyPopup}
           onClose={() => {
-            setJellyPopup(nextJellyPopup.current);
-            nextJellyPopup.current = null;
+            const [next, ...rest] = nextJellyPopup.current;
+            nextJellyPopup.current = rest;
+            setJellyPopup(next ?? null);
           }}
           onView={() => {
-            if (nextJellyPopup.current) {
+            if (nextJellyPopup.current.length > 0) {
               // 뒤에 보여줄 팝업이 남아있으면 아직 이동하지 않고 그것부터 보여준다
-              setJellyPopup(nextJellyPopup.current);
-              nextJellyPopup.current = null;
-            } else {
-              setJellyPopup(null);
-              router.push('/vault?from=popup_cta');
+              const [next, ...rest] = nextJellyPopup.current;
+              nextJellyPopup.current = rest;
+              setJellyPopup(next);
+              return;
             }
+            setJellyPopup(null);
+            // '선물 도착' 팝업은 보관소가 아니라 선물 수령 페이지로 보낸다
+            router.push(jellyPopup?.kind === 'gift_arrived' ? '/invite/claim' : '/vault?from=popup_cta');
           }}
         />
       )}
