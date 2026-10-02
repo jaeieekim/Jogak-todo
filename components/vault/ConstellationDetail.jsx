@@ -138,12 +138,12 @@ export default function ConstellationDetail({ c, onBack }) {
         {shareState !== 'copied' && (
           <div
             className="pointer-events-none relative flex items-center justify-center rounded-12 px-12px py-8px"
-            style={{ background: '#ffffff' }}
+            style={{ background: 'var(--color-vault-amber)' }}
           >
             <span className="whitespace-nowrap text-vault-12 font-semibold" style={{ color: 'var(--color-vault-black)' }}>
-              친구에게 공유하고 젤리 받기
+              🎁 친구에게 공유하고 젤리 받기
             </span>
-            <span aria-hidden className="absolute right-0 top-1/2 h-10px w-10px -translate-y-1/2 translate-x-1/2 rotate-45" style={{ background: '#ffffff' }} />
+            <span aria-hidden className="absolute right-0 top-1/2 h-10px w-10px -translate-y-1/2 translate-x-1/2 rotate-45" style={{ background: 'var(--color-vault-amber)' }} />
           </div>
         )}
 

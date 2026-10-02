@@ -337,9 +337,10 @@ export default function Galaxy({ data, onOpen }) {
             type="button"
             onClick={handleShare}
             disabled={shareState === 'sharing'}
-            className="pointer-events-auto rounded-full px-4 py-1.5 text-vault-12 font-medium transition-transform active:scale-95"
+            className="pointer-events-auto relative rounded-full px-4 py-1.5 text-vault-12 font-medium transition-transform active:scale-95"
             style={{ background: 'var(--color-vault-amber)', color: 'var(--color-vault-black)' }}
           >
+            <span aria-hidden className="absolute left-1/2 top-0 h-8px w-8px -translate-x-1/2 -translate-y-1/2 rotate-45" style={{ background: 'var(--color-vault-amber)' }} />
             {shareState === 'copied' ? '링크가 복사됐어요' : '🎁 공유하고 젤리 선물 받기'}
           </button>
         )}
