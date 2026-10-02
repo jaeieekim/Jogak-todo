@@ -132,46 +132,48 @@ export default function ConstellationDetail({ c, onBack }) {
         </p>
       </div>
 
-      {/* 공유 버튼 — 초대 링크 생성(유저당 고정 1개) 후 공유시트, 없으면 클립보드 복사 */}
-      <button
-        type="button"
-        onClick={handleShare}
-        disabled={shareState === 'sharing'}
-        className="absolute right-4 z-30 flex h-10 w-10 items-center justify-center rounded-full backdrop-blur-md transition-transform active:scale-90"
-        style={{
-          top: 'calc(32px + env(safe-area-inset-top))',
-          background: 'color-mix(in srgb, var(--color-vault-jelly-a) 18%, transparent)',
-          border: '1px solid color-mix(in srgb, var(--color-vault-jelly-a) 40%, transparent)',
-        }}
-        aria-label={shareState === 'copied' ? '링크가 복사됐어요' : '공유하기'}
-      >
-        {shareState === 'copied' ? (
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <path d="M5 12.5L10 17.5L19 7" stroke="var(--color-vault-foreground)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        ) : (
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <circle cx="18" cy="5" r="3" stroke="var(--color-vault-foreground)" strokeWidth="1.6" />
-            <circle cx="6" cy="12" r="3" stroke="var(--color-vault-foreground)" strokeWidth="1.6" />
-            <circle cx="18" cy="19" r="3" stroke="var(--color-vault-foreground)" strokeWidth="1.6" />
-            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" stroke="var(--color-vault-foreground)" strokeWidth="1.6" strokeLinecap="round" />
-            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" stroke="var(--color-vault-foreground)" strokeWidth="1.6" strokeLinecap="round" />
-          </svg>
+      {/* 공유 버튼 + 옆(왼쪽) 안내 말풍선 — 같은 줄에 두어 세로 중앙을 자동으로 맞춘다 */}
+      <div className="absolute right-4 z-30 flex items-center gap-8px" style={{ top: 'calc(32px + env(safe-area-inset-top))' }}>
+        {/* 안내용 — 누르는 버튼 아님(pointer-events-none), 실제 공유는 오른쪽 아이콘 버튼으로 */}
+        {shareState !== 'copied' && (
+          <div
+            className="pointer-events-none relative flex items-center justify-center rounded-12 px-12px py-8px"
+            style={{ background: '#ffffff' }}
+          >
+            <span className="whitespace-nowrap text-vault-12 font-semibold" style={{ color: 'var(--color-vault-black)' }}>
+              친구에게 공유하고 젤리 받기
+            </span>
+            <span aria-hidden className="absolute right-0 top-1/2 h-10px w-10px -translate-y-1/2 translate-x-1/2 rotate-45" style={{ background: '#ffffff' }} />
+          </div>
         )}
-      </button>
 
-      {/* 공유 버튼 바로 아래 흰색 말풍선 안내 — 누르는 버튼 아님(안내만), 실제 공유는 위 버튼으로 */}
-      {shareState !== 'copied' && (
-        <div
-          className="pointer-events-none absolute right-4 z-30 flex items-center justify-center rounded-12 px-12px py-8px"
-          style={{ top: 'calc(32px + 48px + env(safe-area-inset-top))', background: '#ffffff' }}
+        {/* 공유 버튼 — 초대 링크 생성(유저당 고정 1개) 후 공유시트, 없으면 클립보드 복사 */}
+        <button
+          type="button"
+          onClick={handleShare}
+          disabled={shareState === 'sharing'}
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full backdrop-blur-md transition-transform active:scale-90"
+          style={{
+            background: 'color-mix(in srgb, var(--color-vault-jelly-a) 18%, transparent)',
+            border: '1px solid color-mix(in srgb, var(--color-vault-jelly-a) 40%, transparent)',
+          }}
+          aria-label={shareState === 'copied' ? '링크가 복사됐어요' : '공유하기'}
         >
-          <span aria-hidden className="absolute right-14px top-0 h-10px w-10px -translate-y-1/2 rotate-45" style={{ background: '#ffffff' }} />
-          <span className="whitespace-nowrap text-vault-12 font-semibold" style={{ color: 'var(--color-vault-black)' }}>
-            공유하면 젤리 하나 더!
-          </span>
-        </div>
-      )}
+          {shareState === 'copied' ? (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="M5 12.5L10 17.5L19 7" stroke="var(--color-vault-foreground)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          ) : (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <circle cx="18" cy="5" r="3" stroke="var(--color-vault-foreground)" strokeWidth="1.6" />
+              <circle cx="6" cy="12" r="3" stroke="var(--color-vault-foreground)" strokeWidth="1.6" />
+              <circle cx="18" cy="19" r="3" stroke="var(--color-vault-foreground)" strokeWidth="1.6" />
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" stroke="var(--color-vault-foreground)" strokeWidth="1.6" strokeLinecap="round" />
+              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" stroke="var(--color-vault-foreground)" strokeWidth="1.6" strokeLinecap="round" />
+            </svg>
+          )}
+        </button>
+      </div>
     </div>
   );
 }
