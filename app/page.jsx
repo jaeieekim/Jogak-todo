@@ -10,6 +10,7 @@ import MascotSpeechBubble from '../components/MascotSpeechBubble';
 import BottomNav from '../components/BottomNav';
 import JellyPopup from '../components/JellyPopup';
 import EncouragementCard from '../components/EncouragementCard';
+import VaultFeatureIntro from '../components/VaultFeatureIntro';
 import { ENCOURAGEMENT_CARDS } from '../lib/encouragementCards';
 import {
   getMascotState,
@@ -33,6 +34,8 @@ import {
   saveFirstFeedback,
   wasOnboardingSeen,
   wasFirstJellyShown,
+  wasVaultFeatureIntroShown,
+  markVaultFeatureIntroShown,
   markFirstJellyShown,
   wasCarryoverSeenToday,
   markCarryoverSeenToday,
@@ -125,6 +128,8 @@ export default function HomePage() {
   const [resplittingId, setResplittingId] = useState(null); // 재생성 중인 카드 id — 인라인 로더 표시용
   // 젤리 팝업(V1.0 M3): { kind: 'daily'|'bonus'|'completed', source?, bonusType?, constellationName? } | null
   const [jellyPopup, setJellyPopup] = useState(null);
+  // 보관소 기능 추가 소개 — 최초 1회만. 다른 팝업이 떠 있으면 그게 닫힐 때까지 기다렸다가 보여준다(아래 렌더 조건)
+  const [showVaultIntro, setShowVaultIntro] = useState(false);
   // 헤더의 로그인/로그아웃 버튼 — 카카오 등 실계정이 연결된 상태인지(익명 계정만 있으면 false)
   const [loggedIn, setLoggedIn] = useState(false);
   // 첫 로그인 시 "로그인 선물"(별조각 3개)과 "검은고양이 젤리"(즉시 완성)가 같은 순간에 같이 지급될 수 있어서,
@@ -239,6 +244,18 @@ export default function HomePage() {
   useEffect(() => {
     if (loaded) saveTodosByDate(todosByDate);
   }, [todosByDate, loaded]);
+
+  // 보관소 기능 추가 소개 — 최초 1회만 판단. 실제로 보여줄지는 렌더 시점에 다른 팝업과 안 겹치게 조율
+  useEffect(() => {
+    if (loaded && !wasVaultFeatureIntroShown()) {
+      setShowVaultIntro(true);
+    }
+  }, [loaded]);
+
+  function closeVaultIntro() {
+    markVaultFeatureIntroShown();
+    setShowVaultIntro(false);
+  }
 
   const todos = todosByDate[selectedDate] || [];
 
@@ -1053,6 +1070,15 @@ export default function HomePage() {
           </div>
         </div>
       )}
+
+      {/* 캐릭터 젤리 보관소 기능 추가 소개 팝업 — 생애 최초 1회만, 다른 팝업과 겹치지 않을 때만 */}
+      {showVaultIntro &&
+        !encouragementCard &&
+        !jellyPopup &&
+        !showFirstDonePopup &&
+        !resplitAlertTodoId && (
+          <VaultFeatureIntro onClose={closeVaultIntro} onView={closeVaultIntro} />
+        )}
 
       <BottomNav active="home" />
     </div>

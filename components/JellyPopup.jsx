@@ -12,7 +12,7 @@ const BONUS_COPY = {
 };
 
 // 캐러셀에 지나가는 캐릭터 젤리 전체 목록 — 전용 이미지가 아직 없는 별자리(작은곰자리)는 뺐다
-const JELLY_GALLERY = [
+export const JELLY_GALLERY = [
   'blackcat', 'cheesecat', 'hamster', 'capybara', 'quokka', 'panda', 'otter', 'seal',
   'raccoon', 'rabbit', 'squirrel', 'chick', 'dino', 'sheep', 'dog',
 ].map((key) => `/vault/jelly-${key}.png`);
@@ -123,13 +123,14 @@ function PopupShell({ onClose, children }) {
 }
 
 // 캐릭터 젤리들이 옆으로 계속 지나가는 캐러셀 — 목록을 이어붙여 끊김 없이 반복시킨다
-function JellyMarquee() {
+// size: 썸네일 한 변 길이(px). VaultFeatureIntro.jsx에서 더 큰 사이즈로도 재사용한다.
+export function JellyMarquee({ size = 72 }) {
   const loop = [...JELLY_GALLERY, ...JELLY_GALLERY];
   return (
     <div className="-mx-24px overflow-hidden">
       <div className="flex w-max animate-jelly-marquee gap-12px px-24px">
         {loop.map((src, i) => (
-          <Image key={i} src={src} alt="" width={72} height={72} className="shrink-0" />
+          <Image key={i} src={src} alt="" width={size} height={size} className="shrink-0" />
         ))}
       </div>
     </div>
