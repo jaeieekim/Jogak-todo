@@ -115,7 +115,7 @@ export default function InviteDraw({ autoStart = false, onDraw, onDone }) {
   const headline = phase === 'idle' ? HEADLINE.idle : HEADLINE.cracking;
 
   return (
-    <div className="relative flex min-h-[100dvh] w-full flex-col items-center overflow-hidden px-24px text-center">
+    <div className="relative flex min-h-[100dvh] w-full touch-manipulation flex-col items-center overflow-hidden px-24px text-center">
       {/* 보관소 Galaxy.jsx와 동일한 은하수 배경 */}
       <div
         className="absolute inset-0 -z-10"
@@ -144,15 +144,16 @@ export default function InviteDraw({ autoStart = false, onDraw, onDone }) {
             <span className="block whitespace-nowrap">{headline[1]}</span>
           </h1>
 
-          <div className="relative z-10 flex flex-1 flex-col items-center justify-center gap-24px">
-            <div className="relative" style={{ width: 220, height: 274 }}>
+          <div className="relative z-10 flex flex-1 flex-col items-center justify-center gap-8px">
+            <div className="relative" style={{ width: 320, height: 352 }}>
               {showEgg && (
                 <button
                   type="button"
                   onClick={tapEgg}
                   aria-label="알 깨우기"
-                  className="absolute inset-0 flex items-center justify-center"
+                  className="absolute inset-0 flex touch-manipulation items-center justify-center select-none"
                   style={{
+                    WebkitTapHighlightColor: 'transparent',
                     animation: shaking
                       ? 'vault-egg-shake 0.42s ease-in-out'
                       : phase === 'breaking'
@@ -167,7 +168,7 @@ export default function InviteDraw({ autoStart = false, onDraw, onDone }) {
                     </>
                   ) : (
                     <div className="relative">
-                      <Image src="/invite/egg.png" alt="" width={220} height={251} priority />
+                      <Image src="/invite/egg.png" alt="" width={320} height={352} priority />
                       <EggCracks count={cracks} />
                     </div>
                   )}
@@ -186,7 +187,7 @@ export default function InviteDraw({ autoStart = false, onDraw, onDone }) {
                   <span className="text-15 font-semibold" style={{ color: '#000' }}>여기를 눌러보세요</span>
                   <span
                     aria-hidden
-                    className="absolute left-1/2 top-0 h-10px w-10px -translate-x-1/2 -translate-y-1/2 rotate-45"
+                    className="absolute left-1/2 top-0 h-14px w-14px -translate-x-1/2 -translate-y-1/2 rotate-45"
                     style={{ background: '#ffd38c' }}
                   />
                 </div>
@@ -293,15 +294,16 @@ export default function InviteDraw({ autoStart = false, onDraw, onDone }) {
 // 알 금 간 자국 — 탭 횟수(1~3)만큼 점점 늘어난다. 간단한 지그재그 선, 새 에셋 없이 SVG로 직접 그림.
 function EggCracks({ count }) {
   if (count === 0) return null;
+  // 알 타원 안쪽에만 머물도록 가로 폭을 더 좁힘(x:98~128, center 110 기준 ±15) — 바깥으로 안 나가게
   const paths = [
-    'M110 60 L125 95 L108 120 L120 150',
-    'M70 130 L95 150 L80 175 L100 200',
-    'M150 110 L135 140 L155 165 L140 195',
+    'M100 90 L108 110 L98 125 L106 145',
+    'M115 95 L108 115 L118 130 L110 150',
+    'M125 100 L118 120 L128 135 L120 155',
   ];
   return (
     <svg
-      width={220}
-      height={251}
+      width={320}
+      height={352}
       viewBox="0 0 220 251"
       className="pointer-events-none absolute inset-0"
     >
@@ -336,7 +338,7 @@ function EggHalf({ which }) {
         opacity: out ? 0 : 1,
       }}
     >
-      <Image src="/invite/egg.png" alt="" width={220} height={251} />
+      <Image src="/invite/egg.png" alt="" width={320} height={352} />
     </div>
   );
 }
