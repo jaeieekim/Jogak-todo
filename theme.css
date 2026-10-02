@@ -192,6 +192,18 @@ html {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.35; }
 }
+/* 이어가기 응원카드 뽑기(V1.3) — 알 탭 시 흔들림, 탭 유도 말풍선 */
+@keyframes vault-egg-shake {
+  0%, 100% { transform: translateX(0) rotate(0deg); }
+  20% { transform: translateX(-6px) rotate(-4deg); }
+  40% { transform: translateX(5px) rotate(3deg); }
+  60% { transform: translateX(-4px) rotate(-2deg); }
+  80% { transform: translateX(3px) rotate(1deg); }
+}
+@keyframes vault-egg-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
 /* 로그인 화면 별사탕 마스코트 전용 점핑 — 공용 mascot-jump(700ms, -12px)보다 느긋하고 크게 뛴다.
    공용 애니메이션을 바꾸면 홈 화면 생성 중 로딩 모션까지 같이 바뀌어버려서 이 화면만의 별도 키프레임으로 둠. */
 @keyframes login-star-jump {
