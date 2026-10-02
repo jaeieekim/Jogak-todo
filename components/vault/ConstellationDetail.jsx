@@ -100,7 +100,7 @@ export default function ConstellationDetail({ c, onBack }) {
         onClick={onBack}
         className="absolute left-4 z-30 flex h-10 w-10 items-center justify-center rounded-full backdrop-blur-md transition-transform active:scale-90"
         style={{
-          top: 'calc(16px + env(safe-area-inset-top))',
+          top: 'calc(32px + env(safe-area-inset-top))',
           background: 'color-mix(in srgb, var(--color-vault-sky-mid) 60%, transparent)',
           border: '1px solid color-mix(in srgb, var(--color-vault-white) 10%, transparent)',
         }}
@@ -139,7 +139,7 @@ export default function ConstellationDetail({ c, onBack }) {
         disabled={shareState === 'sharing'}
         className="absolute right-4 z-30 flex h-10 w-10 items-center justify-center rounded-full backdrop-blur-md transition-transform active:scale-90"
         style={{
-          top: 'calc(16px + env(safe-area-inset-top))',
+          top: 'calc(32px + env(safe-area-inset-top))',
           background: 'color-mix(in srgb, var(--color-vault-jelly-a) 18%, transparent)',
           border: '1px solid color-mix(in srgb, var(--color-vault-jelly-a) 40%, transparent)',
         }}
@@ -159,6 +159,19 @@ export default function ConstellationDetail({ c, onBack }) {
           </svg>
         )}
       </button>
+
+      {/* 공유 버튼 바로 아래 흰색 말풍선 안내 — 누르는 버튼 아님(안내만), 실제 공유는 위 버튼으로 */}
+      {shareState !== 'copied' && (
+        <div
+          className="pointer-events-none absolute right-4 z-30 flex items-center justify-center rounded-12 px-12px py-8px"
+          style={{ top: 'calc(32px + 48px + env(safe-area-inset-top))', background: '#ffffff' }}
+        >
+          <span aria-hidden className="absolute right-14px top-0 h-10px w-10px -translate-y-1/2 rotate-45" style={{ background: '#ffffff' }} />
+          <span className="whitespace-nowrap text-vault-12 font-semibold" style={{ color: 'var(--color-vault-black)' }}>
+            공유하면 젤리 하나 더!
+          </span>
+        </div>
+      )}
     </div>
   );
 }
