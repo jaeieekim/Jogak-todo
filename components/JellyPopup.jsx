@@ -11,9 +11,9 @@ const BONUS_COPY = {
   comeback: '다시 왔네요. 조각 세 개 드릴게요',
 };
 
-// 캐러셀에 지나가는 캐릭터 젤리 전체 목록 — 전용 이미지가 아직 없는 별자리(작은곰자리)는 뺐다
+// 캐러셀에 지나가는 캐릭터 젤리 전체 목록 — catalog sort_order(1~16) 그대로
 export const JELLY_GALLERY = [
-  'blackcat', 'cheesecat', 'hamster', 'capybara', 'quokka', 'panda', 'otter', 'seal',
+  'blackcat', 'cheesecat', 'hamster', 'capybara', 'cub', 'quokka', 'panda', 'otter', 'seal',
   'raccoon', 'rabbit', 'squirrel', 'chick', 'dino', 'sheep', 'dog',
 ].map((key) => `/vault/jelly-${key}.png`);
 

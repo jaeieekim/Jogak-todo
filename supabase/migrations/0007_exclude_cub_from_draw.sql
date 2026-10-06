@@ -1,7 +1,6 @@
--- jelly-cub.png(작은곰자리 캐릭터 젤리) 이미지가 아직 없는데, 뽑기 함수는 전체 카탈로그에서
--- order by random()으로 뽑다 보니 'cub'도 뽑힐 수 있었음 — 뽑히면 헤딩/이름 텍스트는 정상 표시되는데
--- 캐릭터 그래픽(Image src="/vault/jelly-cub.png")만 깨져서 "캐릭터가 안 나온다"처럼 보이는 버그.
--- 클라이언트 쪽(JellyPopup.jsx JELLY_GALLERY)은 이미 'cub'을 빼뒀는데 서버 뽑기 함수만 안 맞춰져 있었음.
+-- (이 파일은 애초에 jelly-cub.png 이미지가 없어서 'cub'을 뽑기 대상에서 잠깐 뺐던 패치였는데,
+-- 이미지가 생겨서 바로 되돌림 — 원래 0006의 jelly_grant_character와 동일. create or replace라
+-- 이 파일을 먼저 실행했든 안 했든 이번 버전을 실행하면 결과는 같다.)
 create or replace function public.jelly_grant_character(p_user uuid, p_source text)
 returns jsonb
 language plpgsql
@@ -21,7 +20,6 @@ begin
    where cc.key not in (
      select catalog_key from constellations where user_id = p_user and completed_at is not null
    )
-     and cc.key != 'cub' -- 전용 캐릭터 이미지가 아직 없어서 뽑기 대상에서 제외(이미지 생기면 이 줄만 지우면 됨)
    order by random()
    limit 1;
 
