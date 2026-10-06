@@ -149,8 +149,9 @@ export default function InviteDraw({ autoStart = false, onDraw, onDone }) {
           {/* justify-start로 바꿔 egg를 헤드라인 바로 아래(위쪽)에 고정 — justify-center면 카드가 커질수록 아래로 밀림 */}
           <div className="relative z-10 flex flex-1 flex-col items-center justify-start">
             {/* egg.png는 원본의 불필요한 투명 여백을 크롭해둔 상태라, 이 width/height가
-                곧 체감 알 크기와 거의 비례한다(과거처럼 박스만 커지고 알은 그대로인 문제 없음) */}
-            <div className="relative" style={{ width: 300, height: 337 }}>
+                곧 체감 알 크기와 거의 비례한다(과거처럼 박스만 커지고 알은 그대로인 문제 없음).
+                mt-48px: 위치를 아래로 내려달라는 요청 — 헤딩 자체는 안 건드리고 알만 내림 */}
+            <div className="relative mt-48px" style={{ width: 300, height: 329 }}>
               {showEgg && (
                 <button
                   type="button"
@@ -173,7 +174,7 @@ export default function InviteDraw({ autoStart = false, onDraw, onDone }) {
                     </>
                   ) : (
                     <div className="relative">
-                      <Image src="/invite/egg.png" alt="" width={300} height={337} priority />
+                      <Image src="/invite/egg.png" alt="" width={300} height={329} priority />
                       <EggCracks count={cracks} />
                     </div>
                   )}
@@ -188,7 +189,7 @@ export default function InviteDraw({ autoStart = false, onDraw, onDone }) {
                 알과 같은 리듬(vault-egg-bounce 2.2s, 같은 keyframe)으로 같이 움직이게 — 이전엔
                 말풍선만 1.8s라 서로 박자가 어긋났었음 */}
             {phase === 'idle' && (
-              <div className="mt-[-7px] flex flex-col items-center gap-48px">
+              <div className="mt-[-36px] flex flex-col items-center gap-48px">
                 <div
                   className="relative rounded-12 px-12px py-4px"
                   style={{ background: '#ffd38c', animation: 'vault-egg-bounce 2.2s ease-in-out infinite' }}
@@ -303,18 +304,18 @@ export default function InviteDraw({ autoStart = false, onDraw, onDone }) {
 // 알 금 간 자국 — 탭 횟수(1~3)만큼 점점 늘어난다. 간단한 지그재그 선, 새 에셋 없이 SVG로 직접 그림.
 function EggCracks({ count }) {
   if (count === 0) return null;
-  // egg.png를 크롭(578x650)한 뒤 viewBox를 그 픽셀 좌표계에 맞춰서, 불투명한 알 타원이
-  // 실제로 차지하는 영역(x:70~508, y:44~590) 안쪽에만 머물도록 좌표를 다시 잡음 — 바깥으로 안 나가게
+  // egg.png를 크롭(778x854)한 뒤 viewBox를 그 픽셀 좌표계에 맞춰서, 불투명한 알 타원이
+  // 실제로 차지하는 영역(x:172~610, y:152~698) 안쪽에만 머물도록 좌표를 다시 잡음 — 바깥으로 안 나가게
   const paths = [
-    'M260 234 L281 286 L255 325 L276 377',
-    'M299 247 L281 299 L307 338 L286 390',
-    'M325 260 L307 312 L333 351 L312 403',
+    'M354 306 L382 374 L347 425 L375 493',
+    'M407 323 L382 391 L417 442 L389 510',
+    'M442 340 L417 408 L453 459 L424 527',
   ];
   return (
     <svg
       width={300}
-      height={337}
-      viewBox="0 0 578 650"
+      height={329}
+      viewBox="0 0 778 854"
       className="pointer-events-none absolute inset-0"
     >
       {paths.slice(0, count).map((d, i) => (
@@ -350,7 +351,7 @@ function EggHalf({ which }) {
         opacity: out ? 0 : 1,
       }}
     >
-      <Image src="/invite/egg.png" alt="" width={300} height={337} />
+      <Image src="/invite/egg.png" alt="" width={300} height={329} />
     </div>
   );
 }
