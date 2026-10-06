@@ -152,8 +152,9 @@ export default function InviteDraw({ autoStart = false, onDraw, onDone }) {
                 퍼지면서 캔버스 가장자리에서야 완전히 투명해지는 그림이라, 중간에서 잘라내면
                 (크롭하면) 그 경계가 네모 모양으로 보여버림(실측으로 확인). 그래서 크기는
                 width/height로만 조절하고 파일 자체는 건드리지 않는다.
-                mt-48px: 위치를 아래로 내려달라는 요청 — 헤딩 자체는 안 건드리고 알만 내림 */}
-            <div className="relative mt-48px" style={{ width: 420, height: 462 }}>
+                margin-top: 헤딩 텍스트 "바닥"과 "실제로 보이는 알 윗부분" 사이가 정확히 48px가
+                되도록 — 박스 자체는 투명 여백이 위쪽 26.9%라 그만큼 음수로 당겨서 보정(실측 기반) */}
+            <div className="relative" style={{ width: 440, height: 484, marginTop: -77 }}>
               {showEgg && (
                 <button
                   type="button"
@@ -176,7 +177,7 @@ export default function InviteDraw({ autoStart = false, onDraw, onDone }) {
                     </>
                   ) : (
                     <div className="relative">
-                      <Image src="/invite/egg.png" alt="" width={420} height={462} priority />
+                      <Image src="/invite/egg.png" alt="" width={440} height={484} priority />
                       <EggCracks count={cracks} />
                     </div>
                   )}
@@ -192,7 +193,7 @@ export default function InviteDraw({ autoStart = false, onDraw, onDone }) {
                 문서화된 예외 — 크기 바뀌면 재계산 필요). 알과 같은 리듬(vault-egg-bounce 2.2s,
                 같은 keyframe)으로 같이 움직이게 — 이전엔 말풍선만 1.8s라 서로 박자가 어긋났었음 */}
             {phase === 'idle' && (
-              <div className="mt-[-101px] flex flex-col items-center gap-48px">
+              <div className="mt-[-107px] flex flex-col items-center gap-48px">
                 <div
                   className="relative rounded-12 px-12px py-4px"
                   style={{ background: '#ffd38c', animation: 'vault-egg-bounce 2.2s ease-in-out infinite' }}
@@ -315,8 +316,8 @@ function EggCracks({ count }) {
   ];
   return (
     <svg
-      width={420}
-      height={462}
+      width={440}
+      height={484}
       viewBox="0 0 220 251"
       className="pointer-events-none absolute inset-0"
     >
@@ -342,7 +343,7 @@ function EggHalf({ which }) {
       : 'polygon(0 50%, 20% 47%, 40% 52%, 60% 46%, 80% 50%, 100% 45%, 100% 100%, 0 100%)';
   // 알 확대(원본 320→400, ×1.25) 비율에 맞춰 흩어지는 거리도 같이 키움
   // 알 확대(원본 320→380, ×1.1875) 비율에 맞춰 흩어지는 거리도 같이 키움
-  const targetTransform = which === 'top' ? 'translate(-24px, -45px) rotate(-10deg)' : 'translate(21px, 39px) rotate(8deg)';
+  const targetTransform = which === 'top' ? 'translate(-25px, -47px) rotate(-10deg)' : 'translate(22px, 41px) rotate(8deg)';
 
   return (
     <div
@@ -353,7 +354,7 @@ function EggHalf({ which }) {
         opacity: out ? 0 : 1,
       }}
     >
-      <Image src="/invite/egg.png" alt="" width={420} height={462} />
+      <Image src="/invite/egg.png" alt="" width={440} height={484} />
     </div>
   );
 }
