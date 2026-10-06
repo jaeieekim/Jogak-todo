@@ -139,13 +139,14 @@ export default function InviteDraw({ autoStart = false, onDraw, onDone }) {
         </div>
       ) : phase !== 'result' ? (
         <>
-          <h1 className="relative z-10 pt-[100px] text-vault-26 font-bold" style={{ color: 'var(--color-vault-foreground)' }}>
+          {/* 알을 키우면서 생긴 높이 증가분(+60px)만큼 상단 여백을 줄여 작은 화면에서도 안 잘리게 함 */}
+          <h1 className="relative z-10 pt-[64px] text-vault-26 font-bold" style={{ color: 'var(--color-vault-foreground)' }}>
             <span className="block whitespace-nowrap">{headline[0]}</span>
             <span className="block whitespace-nowrap">{headline[1]}</span>
           </h1>
 
-          <div className="relative z-10 flex flex-1 flex-col items-center justify-center gap-8px">
-            <div className="relative" style={{ width: 320, height: 352 }}>
+          <div className="relative z-10 flex flex-1 flex-col items-center justify-center gap-24px">
+            <div className="relative" style={{ width: 360, height: 396 }}>
               {showEgg && (
                 <button
                   type="button"
@@ -168,7 +169,7 @@ export default function InviteDraw({ autoStart = false, onDraw, onDone }) {
                     </>
                   ) : (
                     <div className="relative">
-                      <Image src="/invite/egg.png" alt="" width={320} height={352} priority />
+                      <Image src="/invite/egg.png" alt="" width={360} height={396} priority />
                       <EggCracks count={cracks} />
                     </div>
                   )}
@@ -302,8 +303,8 @@ function EggCracks({ count }) {
   ];
   return (
     <svg
-      width={320}
-      height={352}
+      width={360}
+      height={396}
       viewBox="0 0 220 251"
       className="pointer-events-none absolute inset-0"
     >
@@ -327,7 +328,8 @@ function EggHalf({ which }) {
     which === 'top'
       ? 'polygon(0 0, 100% 0, 100% 45%, 80% 50%, 60% 46%, 40% 52%, 20% 47%, 0 50%)'
       : 'polygon(0 50%, 20% 47%, 40% 52%, 60% 46%, 80% 50%, 100% 45%, 100% 100%, 0 100%)';
-  const targetTransform = which === 'top' ? 'translate(-18px, -34px) rotate(-10deg)' : 'translate(16px, 30px) rotate(8deg)';
+  // 알 확대(320→360, ×1.125) 비율에 맞춰 흩어지는 거리도 같이 키움
+  const targetTransform = which === 'top' ? 'translate(-20px, -38px) rotate(-10deg)' : 'translate(18px, 34px) rotate(8deg)';
 
   return (
     <div
@@ -338,7 +340,7 @@ function EggHalf({ which }) {
         opacity: out ? 0 : 1,
       }}
     >
-      <Image src="/invite/egg.png" alt="" width={320} height={352} />
+      <Image src="/invite/egg.png" alt="" width={360} height={396} />
     </div>
   );
 }
