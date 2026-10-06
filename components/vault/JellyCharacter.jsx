@@ -79,6 +79,7 @@ export default function JellyCharacter({ src, alt, tint, onInteract, widthVw = 6
         }}
       >
         <Image
+          key={`jelly-${punch}`} // 탭마다 리마운트해서 애니메이션을 처음부터 다시 재생
           src={src}
           alt={alt}
           width={maxWidthPx}
@@ -92,8 +93,12 @@ export default function JellyCharacter({ src, alt, tint, onInteract, widthVw = 6
           style={{
             transformOrigin: `${tap.x}% ${tap.y}%`,
             transform: held ? `rotate(${angle}deg) scale(${1 + stretch}, ${1 - stretch})` : undefined,
-            // 탭해도 전체는 가만히 있고(띠용 X), 터치한 자리만 아래 wobble 레이어가 따로 흔들린다
-            animation: held ? 'none' : 'vault-squish-idle 3.4s ease-in-out infinite',
+            // 원래처럼 전체가 자연스럽게 반응(약하게) — 탭한 자리 주변은 아래 레이어가 덧씌워져 더 세게 반응
+            animation: held
+              ? 'none'
+              : punch > 0
+                ? 'vault-jelly-punch 0.55s cubic-bezier(0.34,1.56,0.64,1), vault-squish-idle 3.4s ease-in-out 0.55s infinite'
+                : 'vault-squish-idle 3.4s ease-in-out infinite',
             filter: `${tint ? tint + ' ' : ''}drop-shadow(0 18px 40px color-mix(in srgb, var(--color-vault-black) 55%, transparent)) drop-shadow(0 0 26px color-mix(in srgb, var(--color-vault-amber) 25%, transparent))`,
             WebkitUserSelect: 'none',
             // iOS 사파리는 user-select만으론 안 막히고 이 속성을 따로 꺼야 길게 눌렀을 때
@@ -103,8 +108,9 @@ export default function JellyCharacter({ src, alt, tint, onInteract, widthVw = 6
         />
         {punch > 0 && (
           <>
-            {/* 터치한 자리만 따로 흔들리는 효과 — 같은 이미지를 탭 지점 기준 원형으로 잘라서
-                그 부분만 punch 애니메이션 재생(전체 이미지는 위에서 그대로 정지). */}
+            {/* 탭한 자리 주변만 더 세게 반응 — clip-path(원형 잘라내기)로 경계가 뚝 끊기지 않도록,
+                부드러운 radial-gradient 마스크로 가장자리가 자연스럽게 사라지게(페더링) 처리.
+                바닥(위 Image)은 전체가 약하게, 이 레이어는 탭 지점 근처만 강하게 — 둘이 자연스럽게 겹침. */}
             <img
               key={`wobble-${punch}`}
               src={src}
@@ -113,9 +119,10 @@ export default function JellyCharacter({ src, alt, tint, onInteract, widthVw = 6
               draggable={false}
               className="no-ios-callout pointer-events-none absolute inset-0 block w-full select-none"
               style={{
-                clipPath: `circle(38% at ${tap.x}% ${tap.y}%)`,
+                WebkitMaskImage: `radial-gradient(circle at ${tap.x}% ${tap.y}%, black 0%, black 22%, transparent 65%)`,
+                maskImage: `radial-gradient(circle at ${tap.x}% ${tap.y}%, black 0%, black 22%, transparent 65%)`,
                 transformOrigin: `${tap.x}% ${tap.y}%`,
-                animation: 'vault-jelly-punch 0.55s cubic-bezier(0.34,1.56,0.64,1)',
+                animation: 'vault-jelly-punch-strong 0.55s cubic-bezier(0.34,1.56,0.64,1)',
                 filter: `${tint ? tint + ' ' : ''}drop-shadow(0 18px 40px color-mix(in srgb, var(--color-vault-black) 55%, transparent)) drop-shadow(0 0 26px color-mix(in srgb, var(--color-vault-amber) 25%, transparent))`,
               }}
             />
