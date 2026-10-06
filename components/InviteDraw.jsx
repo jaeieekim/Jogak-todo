@@ -148,10 +148,12 @@ export default function InviteDraw({ autoStart = false, onDraw, onDone }) {
 
           {/* justify-start로 바꿔 egg를 헤드라인 바로 아래(위쪽)에 고정 — justify-center면 카드가 커질수록 아래로 밀림 */}
           <div className="relative z-10 flex flex-1 flex-col items-center justify-start">
-            {/* egg.png는 원본의 불필요한 투명 여백을 크롭해둔 상태라, 이 width/height가
-                곧 체감 알 크기와 거의 비례한다(과거처럼 박스만 커지고 알은 그대로인 문제 없음).
+            {/* egg.png는 크롭하지 않은 원본 그대로 쓴다 — 알 바깥의 은은한 후광이 아주 길게
+                퍼지면서 캔버스 가장자리에서야 완전히 투명해지는 그림이라, 중간에서 잘라내면
+                (크롭하면) 그 경계가 네모 모양으로 보여버림(실측으로 확인). 그래서 크기는
+                width/height로만 조절하고 파일 자체는 건드리지 않는다.
                 mt-48px: 위치를 아래로 내려달라는 요청 — 헤딩 자체는 안 건드리고 알만 내림 */}
-            <div className="relative mt-48px" style={{ width: 300, height: 329 }}>
+            <div className="relative mt-48px" style={{ width: 420, height: 462 }}>
               {showEgg && (
                 <button
                   type="button"
@@ -174,7 +176,7 @@ export default function InviteDraw({ autoStart = false, onDraw, onDone }) {
                     </>
                   ) : (
                     <div className="relative">
-                      <Image src="/invite/egg.png" alt="" width={300} height={329} priority />
+                      <Image src="/invite/egg.png" alt="" width={420} height={462} priority />
                       <EggCracks count={cracks} />
                     </div>
                   )}
@@ -185,11 +187,12 @@ export default function InviteDraw({ autoStart = false, onDraw, onDone }) {
             </div>
 
             {/* 말풍선 — 알 "컨테이너"가 아니라 "실제로 보이는 알 모양" 기준 24px 아래.
-                egg.png를 투명 여백 없이 크롭한 뒤 다시 실측(픽셀 스캔)해서 보정한 값(크기 바뀌면 재계산 필요).
-                알과 같은 리듬(vault-egg-bounce 2.2s, 같은 keyframe)으로 같이 움직이게 — 이전엔
-                말풍선만 1.8s라 서로 박자가 어긋났었음 */}
+                egg.png(크롭 안 함, 1080x1188) 안에서 불투명한 알 본체는 캔버스의 27~73%만
+                차지하고 나머지는 투명 여백이라, 그 여백만큼 음수 마진으로 당겨서 보정(실측 기반,
+                문서화된 예외 — 크기 바뀌면 재계산 필요). 알과 같은 리듬(vault-egg-bounce 2.2s,
+                같은 keyframe)으로 같이 움직이게 — 이전엔 말풍선만 1.8s라 서로 박자가 어긋났었음 */}
             {phase === 'idle' && (
-              <div className="mt-[-36px] flex flex-col items-center gap-48px">
+              <div className="mt-[-101px] flex flex-col items-center gap-48px">
                 <div
                   className="relative rounded-12 px-12px py-4px"
                   style={{ background: '#ffd38c', animation: 'vault-egg-bounce 2.2s ease-in-out infinite' }}
@@ -304,18 +307,17 @@ export default function InviteDraw({ autoStart = false, onDraw, onDone }) {
 // 알 금 간 자국 — 탭 횟수(1~3)만큼 점점 늘어난다. 간단한 지그재그 선, 새 에셋 없이 SVG로 직접 그림.
 function EggCracks({ count }) {
   if (count === 0) return null;
-  // egg.png를 크롭(778x854)한 뒤 viewBox를 그 픽셀 좌표계에 맞춰서, 불투명한 알 타원이
-  // 실제로 차지하는 영역(x:172~610, y:152~698) 안쪽에만 머물도록 좌표를 다시 잡음 — 바깥으로 안 나가게
+  // 알 타원 안쪽에만 머물도록 가로 폭을 좁힘(x:98~128, center 110 기준 ±15) — 바깥으로 안 나가게
   const paths = [
-    'M354 306 L382 374 L347 425 L375 493',
-    'M407 323 L382 391 L417 442 L389 510',
-    'M442 340 L417 408 L453 459 L424 527',
+    'M100 90 L108 110 L98 125 L106 145',
+    'M115 95 L108 115 L118 130 L110 150',
+    'M125 100 L118 120 L128 135 L120 155',
   ];
   return (
     <svg
-      width={300}
-      height={329}
-      viewBox="0 0 778 854"
+      width={420}
+      height={462}
+      viewBox="0 0 220 251"
       className="pointer-events-none absolute inset-0"
     >
       {paths.slice(0, count).map((d, i) => (
@@ -340,7 +342,7 @@ function EggHalf({ which }) {
       : 'polygon(0 50%, 20% 47%, 40% 52%, 60% 46%, 80% 50%, 100% 45%, 100% 100%, 0 100%)';
   // 알 확대(원본 320→400, ×1.25) 비율에 맞춰 흩어지는 거리도 같이 키움
   // 알 확대(원본 320→380, ×1.1875) 비율에 맞춰 흩어지는 거리도 같이 키움
-  const targetTransform = which === 'top' ? 'translate(-17px, -32px) rotate(-10deg)' : 'translate(15px, 28px) rotate(8deg)';
+  const targetTransform = which === 'top' ? 'translate(-24px, -45px) rotate(-10deg)' : 'translate(21px, 39px) rotate(8deg)';
 
   return (
     <div
@@ -351,7 +353,7 @@ function EggHalf({ which }) {
         opacity: out ? 0 : 1,
       }}
     >
-      <Image src="/invite/egg.png" alt="" width={300} height={329} />
+      <Image src="/invite/egg.png" alt="" width={420} height={462} />
     </div>
   );
 }
