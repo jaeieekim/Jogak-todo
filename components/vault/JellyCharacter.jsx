@@ -79,7 +79,6 @@ export default function JellyCharacter({ src, alt, tint, onInteract, widthVw = 6
         }}
       >
         <Image
-          key={`jelly-${punch}`} // 탭마다 리마운트해서 눌림 애니메이션을 처음부터 다시 재생
           src={src}
           alt={alt}
           width={maxWidthPx}
@@ -93,11 +92,8 @@ export default function JellyCharacter({ src, alt, tint, onInteract, widthVw = 6
           style={{
             transformOrigin: `${tap.x}% ${tap.y}%`,
             transform: held ? `rotate(${angle}deg) scale(${1 + stretch}, ${1 - stretch})` : undefined,
-            animation: held
-              ? 'none'
-              : punch > 0
-                ? 'vault-jelly-punch 0.55s cubic-bezier(0.34,1.56,0.64,1), vault-squish-idle 3.4s ease-in-out 0.55s infinite'
-                : 'vault-squish-idle 3.4s ease-in-out infinite',
+            // 탭해도 전체는 가만히 있고(띠용 X), 터치한 자리만 아래 wobble 레이어가 따로 흔들린다
+            animation: held ? 'none' : 'vault-squish-idle 3.4s ease-in-out infinite',
             filter: `${tint ? tint + ' ' : ''}drop-shadow(0 18px 40px color-mix(in srgb, var(--color-vault-black) 55%, transparent)) drop-shadow(0 0 26px color-mix(in srgb, var(--color-vault-amber) 25%, transparent))`,
             WebkitUserSelect: 'none',
             // iOS 사파리는 user-select만으론 안 막히고 이 속성을 따로 꺼야 길게 눌렀을 때
@@ -106,21 +102,39 @@ export default function JellyCharacter({ src, alt, tint, onInteract, widthVw = 6
           }}
         />
         {punch > 0 && (
-          <span
-            key={`dent-${punch}`}
-            className="pointer-events-none absolute"
-            style={{
-              left: `${tap.x}%`,
-              top: `${tap.y}%`,
-              width: '34%',
-              height: '34%',
-              borderRadius: '50%',
-              background:
-                'radial-gradient(closest-side, color-mix(in srgb, var(--color-vault-black) 58%, transparent), color-mix(in srgb, var(--color-vault-black) 26%, transparent) 55%, transparent 72%)',
-              mixBlendMode: 'multiply',
-              animation: 'vault-dent-fade 0.5s ease-out forwards',
-            }}
-          />
+          <>
+            {/* 터치한 자리만 따로 흔들리는 효과 — 같은 이미지를 탭 지점 기준 원형으로 잘라서
+                그 부분만 punch 애니메이션 재생(전체 이미지는 위에서 그대로 정지). */}
+            <img
+              key={`wobble-${punch}`}
+              src={src}
+              alt=""
+              aria-hidden="true"
+              draggable={false}
+              className="no-ios-callout pointer-events-none absolute inset-0 block w-full select-none"
+              style={{
+                clipPath: `circle(38% at ${tap.x}% ${tap.y}%)`,
+                transformOrigin: `${tap.x}% ${tap.y}%`,
+                animation: 'vault-jelly-punch 0.55s cubic-bezier(0.34,1.56,0.64,1)',
+                filter: `${tint ? tint + ' ' : ''}drop-shadow(0 18px 40px color-mix(in srgb, var(--color-vault-black) 55%, transparent)) drop-shadow(0 0 26px color-mix(in srgb, var(--color-vault-amber) 25%, transparent))`,
+              }}
+            />
+            <span
+              key={`dent-${punch}`}
+              className="pointer-events-none absolute"
+              style={{
+                left: `${tap.x}%`,
+                top: `${tap.y}%`,
+                width: '34%',
+                height: '34%',
+                borderRadius: '50%',
+                background:
+                  'radial-gradient(closest-side, color-mix(in srgb, var(--color-vault-black) 58%, transparent), color-mix(in srgb, var(--color-vault-black) 26%, transparent) 55%, transparent 72%)',
+                mixBlendMode: 'multiply',
+                animation: 'vault-dent-fade 0.5s ease-out forwards',
+              }}
+            />
+          </>
         )}
       </div>
     </div>
