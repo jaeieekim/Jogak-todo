@@ -139,8 +139,7 @@ export default function InviteDraw({ autoStart = false, onDraw, onDone }) {
         </div>
       ) : phase !== 'result' ? (
         <>
-          {/* 알이 커진 만큼 상단 여백을 토큰값으로 더 줄여서 egg를 위로 당기고, 작은 화면에서도 안 잘리게 함 */}
-          <h1 className="relative z-10 pt-32px text-vault-26 font-bold" style={{ color: 'var(--color-vault-foreground)' }}>
+          <h1 className="relative z-10 pt-[100px] text-vault-26 font-bold" style={{ color: 'var(--color-vault-foreground)' }}>
             <span className="block whitespace-nowrap">{headline[0]}</span>
             <span className="block whitespace-nowrap">{headline[1]}</span>
           </h1>
@@ -182,11 +181,15 @@ export default function InviteDraw({ autoStart = false, onDraw, onDone }) {
               {phase === 'bursting' && <Orbs out={orbsOut} />}
             </div>
 
-            {/* 말풍선 — 알 바로 아래 24px(margin-top, flex gap에 묻히지 않게 명시적으로) */}
+            {/* 말풍선 — 알 "컨테이너"가 아니라 "실제로 보이는 알 모양" 기준 24px 아래.
+                egg.png(1080x1188) 안에서 실제 보이는 알 본체는 캔버스의 27~73%만 차지하고 나머지
+                (아래쪽 약 113px)는 투명 여백이라, 컨테이너 바닥 기준으로 margin을 주면 실제로는
+                알 밑으로 훨씬 더 떨어져 보인다(실측: 렌더된 화면 픽셀 스캔으로 확인) — 그 투명
+                여백만큼 음수로 당겨서 보정(문서화된 예외) */}
             {phase === 'idle' && (
-              <div className="mt-24px flex flex-col items-center gap-12px">
+              <div className="mt-[-89px] flex flex-col items-center gap-12px">
                 <div
-                  className="relative rounded-12 px-12px py-8px"
+                  className="relative rounded-12 px-12px py-4px"
                   style={{ background: '#ffd38c', animation: 'vault-egg-bounce 1.8s ease-in-out infinite' }}
                 >
                   <span className="text-15 font-semibold" style={{ color: '#000' }}>여기를 눌러보세요</span>

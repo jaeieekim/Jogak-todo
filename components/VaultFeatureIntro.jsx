@@ -66,7 +66,7 @@ export default function VaultFeatureIntro({ onClose, onView }) {
       <div className="pointer-events-none fixed inset-x-0 bottom-0 z-50">
         <div className="relative mx-auto h-[56px] w-full max-w-[480px]">
           {/* 손글씨 화살표 — 카드에서 "보관소" 쪽을 가리킴 (피그마 원본 SVG·회전값 그대로, 문서화된 예외) */}
-          <div className="absolute" style={{ right: '16%', bottom: '72px', transform: 'rotate(68.26deg)' }}>
+          <div className="absolute" style={{ right: '20%', bottom: '90px', transform: 'rotate(68.26deg)' }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/vault-intro/arrow.svg" alt="" width={100} height={41} />
           </div>
