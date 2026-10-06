@@ -154,7 +154,7 @@ export default function InviteDraw({ autoStart = false, onDraw, onDone }) {
                 width/height로만 조절하고 파일 자체는 건드리지 않는다.
                 margin-top: 헤딩 텍스트 "바닥"과 "실제로 보이는 알 윗부분" 사이가 정확히 48px가
                 되도록 — 박스 자체는 투명 여백이 위쪽 26.9%라 그만큼 음수로 당겨서 보정(실측 기반) */}
-            <div className="relative" style={{ width: 440, height: 484, marginTop: -61 }}>
+            <div className="relative" style={{ width: 440, height: 484, marginTop: -29 }}>
               {showEgg && (
                 <button
                   type="button"
