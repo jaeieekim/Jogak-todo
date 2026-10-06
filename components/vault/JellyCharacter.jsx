@@ -50,8 +50,13 @@ export default function JellyCharacter({ src, alt, tint, onInteract, widthVw = 6
     }
   };
 
-  const pull = Math.hypot(pos.x, pos.y);
-  const stretch = held ? Math.min(pull / 400, 0.12) : 0;
+  // 당긴 방향으로 늘어나게 — 예전엔 방향 상관없이 항상 가로로만 넓어지고(scaleX↑) 세로는 눌렸는데(scaleY↓),
+  // 위로 당겨도 가로로 퍼지는 것처럼 보이는 문제가 있었음. 이제 x/y 성분을 따로 봐서, 세로로 당기면
+  // 세로로(스트레치) 늘어나고 가로는 살짝 눌리고, 가로로 당기면 그 반대로 동작한다.
+  const stretchX = held ? Math.min(Math.abs(pos.x) / 300, 0.22) : 0;
+  const stretchY = held ? Math.min(Math.abs(pos.y) / 300, 0.22) : 0;
+  const scaleX = 1 + stretchX - stretchY * 0.5;
+  const scaleY = 1 + stretchY - stretchX * 0.5;
   const angle = held ? pos.x / 22 : 0;
 
   return (
@@ -66,7 +71,7 @@ export default function JellyCharacter({ src, alt, tint, onInteract, widthVw = 6
           borderRadius: '50%',
           background: 'radial-gradient(closest-side, color-mix(in srgb, var(--color-vault-amber) 28%, transparent), transparent)',
           filter: 'blur(6px)',
-          transform: `translateX(${pos.x * 0.4}px) scale(${1 - stretch})`,
+          transform: `translateX(${pos.x * 0.4}px) scale(${1 - stretchY})`,
         }}
       />
       <div
@@ -92,7 +97,7 @@ export default function JellyCharacter({ src, alt, tint, onInteract, widthVw = 6
           className="no-ios-callout block w-full touch-none select-none cursor-grab active:cursor-grabbing"
           style={{
             transformOrigin: `${tap.x}% ${tap.y}%`,
-            transform: held ? `rotate(${angle}deg) scale(${1 + stretch}, ${1 - stretch})` : undefined,
+            transform: held ? `rotate(${angle}deg) scale(${scaleX}, ${scaleY})` : undefined,
             // 원래처럼 전체가 자연스럽게 반응(약하게) — 탭한 자리 주변은 아래 레이어가 덧씌워져 더 세게 반응
             animation: held
               ? 'none'
