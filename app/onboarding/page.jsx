@@ -291,6 +291,10 @@ function SplitDemo() {
 
 export default function OnboardingPage() {
   const router = useRouter();
+  const goLogin = () => {
+    markOnboardingSeen();
+    router.push('/login');
+  };
   const goHome = () => {
     markOnboardingSeen();
     router.push('/');
@@ -352,10 +356,14 @@ export default function OnboardingPage() {
         </ul>
       </div>
 
-      {/* 하단: 시작하기(primary) — 포인트 리스트와 spacing/48 고정 간격 (md 콘텐츠 블록 리듬 32–48px) */}
-      <div className="pt-48px">
-        <Button className="w-full" onClick={goHome}>
-          시작하기
+      {/* 하단: 로그인하고 시작하기(primary) / 로그인 없이 사용해보기(inverse) —
+          포인트 리스트와 spacing/48 고정 간격 (md 콘텐츠 블록 리듬 32–48px) */}
+      <div className="flex flex-col gap-8px pt-48px">
+        <Button className="w-full" onClick={goLogin}>
+          로그인하고 시작하기
+        </Button>
+        <Button variant="inverse" className="w-full" onClick={goHome}>
+          로그인 없이 사용해보기
         </Button>
       </div>
     </div>

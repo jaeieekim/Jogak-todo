@@ -4,6 +4,7 @@
 const VARIANT_CLASSES = {
   primary: 'bg-brand-primary text-text-on-brand',
   secondary: 'bg-bg-tint text-brand-pressed',
+  inverse: 'bg-bg-inverse text-text-on-inverse', // 어두운 서피스 버튼 — 온보딩의 "로그인 없이 사용해보기" 등
 };
 
 export default function Button({
