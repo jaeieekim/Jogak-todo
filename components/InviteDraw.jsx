@@ -20,12 +20,12 @@ const ORB_COLORS = [
   'var(--color-vault-jelly-c)', // 핑크
   'var(--color-vault-amber)', // 호박색
 ];
-// 4방향으로 흩어지는 빛(피그마 '뽑기 2' 참조) — 중앙에서 대각선으로
+// 4방향으로 흩어지는 빛 — 중앙에서 대각선으로. 더 크고 천천히 흩어지도록 거리도 키움
 const ORB_TARGETS = [
-  { x: -90, y: -70 },
-  { x: 90, y: -50 },
-  { x: -70, y: 70 },
-  { x: 80, y: 80 },
+  { x: -170, y: -130 },
+  { x: 170, y: -95 },
+  { x: -130, y: 130 },
+  { x: 150, y: 150 },
 ];
 
 const STATUS_MESSAGE = {
@@ -98,7 +98,7 @@ export default function InviteDraw({ autoStart = false, onDraw, onDone }) {
   useEffect(() => {
     if (phase !== 'bursting') return;
     const id = requestAnimationFrame(() => setOrbsOut(true)); // 다음 프레임에 타겟 위치로 트랜지션 시작
-    const t = setTimeout(() => finishWithResult(), 700);
+    const t = setTimeout(() => finishWithResult(), 1450); // 빛 무리 연출(500ms 지연 뒤 900ms 페이드, 1410ms에 끝남)이 다 끝난 뒤에 전환
     return () => {
       cancelAnimationFrame(id);
       clearTimeout(t);
@@ -373,16 +373,19 @@ function Orbs({ out }) {
       {ORB_TARGETS.map((t, i) => (
         <span
           key={i}
-          className="pointer-events-none absolute left-1/2 top-1/2 rounded-full transition-all duration-700 ease-out"
+          className="pointer-events-none absolute left-1/2 top-1/2 rounded-full"
           style={{
-            width: 14,
-            height: 14,
+            width: 38,
+            height: 38,
             background: ORB_COLORS[i],
-            boxShadow: `0 0 16px 4px ${ORB_COLORS[i]}`,
+            boxShadow: `0 0 48px 16px ${ORB_COLORS[i]}`,
             transform: out
-              ? `translate(calc(-50% + ${t.x}px), calc(-50% + ${t.y}px)) scale(0.3)`
+              ? `translate(calc(-50% + ${t.x}px), calc(-50% + ${t.y}px)) scale(0.55)`
               : 'translate(-50%, -50%) scale(1)',
             opacity: out ? 0 : 1,
+            // 이동은 처음부터 끝까지 천천히(1300ms), 흐려지는 건 절반쯤 이동한 뒤에야 시작(delay)해서
+            // 너무 빨리 사라지는 느낌 없이 퍼져나가다가 서서히 없어지도록
+            transition: 'transform 1300ms cubic-bezier(0.16,1,0.3,1), opacity 900ms ease-in 500ms',
           }}
         />
       ))}
