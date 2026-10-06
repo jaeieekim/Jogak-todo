@@ -51,7 +51,17 @@ export default function InviteDraw({ autoStart = false, onDraw, onDone }) {
   const [touched, setTouched] = useState(false);
   const [result, setResult] = useState(null);
   const [errorMsg, setErrorMsg] = useState('');
+  const [buttonsVisible, setButtonsVisible] = useState(false); // 캐릭터가 먼저 보이고, 버튼은 그 뒤에 나타나도록
   const drawPromiseRef = useRef(null);
+
+  useEffect(() => {
+    if (phase !== 'result') {
+      setButtonsVisible(false);
+      return;
+    }
+    const t = setTimeout(() => setButtonsVisible(true), 500);
+    return () => clearTimeout(t);
+  }, [phase]);
 
   function startDraw() {
     if (drawPromiseRef.current) return;
@@ -59,7 +69,16 @@ export default function InviteDraw({ autoStart = false, onDraw, onDone }) {
   }
 
   async function finishWithResult() {
-    const r = await drawPromiseRef.current;
+    let r;
+    try {
+      r = await drawPromiseRef.current;
+    } catch {
+      // onDraw()가 던지면(네트워크 오류 등) 여기서 안 잡으면 화면이 bursting 단계에 그대로
+      // 멈춰버린다(빛 무리만 사라지고 캐릭터도 에러 메시지도 안 뜨는 상태) — 반드시 에러 화면으로 전환
+      setErrorMsg('잠깐 삐끗했어요. 한 번만 다시 눌러줄래요?');
+      setPhase('error');
+      return;
+    }
     if (!r || r.status === 'needs_login') return; // needs_login은 onDraw 내부에서 이미 리다이렉트 처리
     if (r.status !== 'granted') {
       setErrorMsg(STATUS_MESSAGE[r.status] ?? '잠깐 삐끗했어요. 한 번만 다시 눌러줄래요?');
@@ -284,7 +303,14 @@ export default function InviteDraw({ autoStart = false, onDraw, onDone }) {
             <div className="flex-1" style={{ minHeight: 24 }} />
           </div>
 
-          <div className="relative z-10 flex w-full flex-col gap-12px px-24px" style={{ paddingBottom: '32px' }}>
+          <div
+            className="relative z-10 flex w-full flex-col gap-12px px-24px transition-all duration-500 ease-out"
+            style={{
+              paddingBottom: '32px',
+              opacity: buttonsVisible ? 1 : 0,
+              transform: buttonsVisible ? 'translateY(0)' : 'translateY(12px)',
+            }}
+          >
             <Button className="w-full" onClick={() => onDone?.(result)}>
               내가 뽑은 젤리 받기
             </Button>
