@@ -14,11 +14,14 @@ import Button from './Button';
 import { characterName, characterCaption } from '../lib/encouragementCards';
 
 const CRACKS_TO_BREAK = 3;
+// 피그마 "뽑기 2"(node-id 124:1164) 안에 숨어있던 실제 빛무리 에셋(Starfield 레이어 속
+// "Ellipse 4~7", 31px) 그대로 — 흰색 코어 + 색깔 있는 글로우 조합. 일반 별(1~2px)과 섞여 있어서
+// 처음엔 놓쳤던 것. 각 글로우 색은 figma 필터의 feColorMatrix 값을 hex로 환산해서 그대로 가져옴.
 const ORB_COLORS = [
-  'var(--color-vault-jelly-a)', // 보라
-  'var(--color-vault-jelly-b)', // 하늘
-  'var(--color-vault-jelly-c)', // 핑크
-  'var(--color-vault-amber)', // 호박색
+  '#E74FFF', // Ellipse 6 — 보라/핑크
+  '#13D8FF', // Ellipse 7 — 하늘
+  '#FF4F4F', // Ellipse 4 — 코럴핑크
+  '#FFDC4F', // Ellipse 5 — 호박색
 ];
 // 4방향으로 흩어지는 빛 — 중앙에서 대각선으로. 더 크고 천천히 흩어지도록 거리도 키움
 const ORB_TARGETS = [
@@ -403,8 +406,11 @@ function Orbs({ out }) {
           style={{
             width: 38,
             height: 38,
-            background: ORB_COLORS[i],
-            boxShadow: `0 0 48px 16px ${ORB_COLORS[i]}`,
+            // 피그마 원본: 흰색 코어 + 색깔 있는 글로우(drop-shadow blur 6) + 전체 blur(2) —
+            // 단색 점이 아니라 "흰 빛이 색깔 있는 아지랑이에 싸인" 느낌
+            background: 'white',
+            boxShadow: `0 0 28px 10px ${ORB_COLORS[i]}`,
+            filter: 'blur(1px)',
             transform: out
               ? `translate(calc(-50% + ${t.x}px), calc(-50% + ${t.y}px)) scale(0.55)`
               : 'translate(-50%, -50%) scale(1)',
