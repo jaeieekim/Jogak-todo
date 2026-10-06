@@ -61,14 +61,14 @@ export default function InviteClient({ code }) {
         className="flex min-h-[100dvh] w-full flex-col items-center justify-center gap-20px px-24px text-center"
         style={{ background: 'var(--color-vault-sky-deep)' }}
       >
-        <p className="text-vault-13" style={{ color: 'var(--color-vault-muted-foreground)' }}>
+        <p className="text-vault-13" style={{ color: 'var(--color-vault-white)' }}>
           이미 계정이 있어요! 이 선물은 최초 공유와 최초 가입 시에 한 번만 받을 수 있어요.
         </p>
         <button
           type="button"
           onClick={() => router.push('/vault')}
           className="rounded-12 px-20px py-[14px] text-15 font-medium transition active:scale-[0.98]"
-          style={{ background: 'var(--color-vault-jelly-a)', color: 'var(--color-vault-sky-deep)' }}
+          style={{ background: 'var(--color-vault-amber)', color: 'var(--color-vault-black)' }}
         >
           보관소로 돌아가기
         </button>
