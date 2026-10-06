@@ -66,7 +66,9 @@ export default function InviteClient({ code }) {
             style={{ background: 'var(--color-vault-sky-deep)' }}
           >
             <p className="text-vault-13" style={{ color: 'var(--color-vault-white)' }}>
-              이미 계정이 있어요! 이 선물은 최초 공유와 최초 가입 시에 한 번만 받을 수 있어요.
+              이미 계정이 있어요!
+              <br />
+              이 선물은 최초 공유와 최초 가입 시에 한 번만 받을 수 있어요.
             </p>
             <button
               type="button"
