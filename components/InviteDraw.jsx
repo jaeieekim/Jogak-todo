@@ -193,7 +193,7 @@ export default function InviteDraw({ autoStart = false, onDraw, onDone }) {
                 문서화된 예외 — 크기 바뀌면 재계산 필요). 알과 같은 리듬(vault-egg-bounce 2.2s,
                 같은 keyframe)으로 같이 움직이게 — 이전엔 말풍선만 1.8s라 서로 박자가 어긋났었음 */}
             {phase === 'idle' && (
-              <div className="mt-[-123px] flex flex-col items-center gap-48px">
+              <div className="mt-[-123px] flex flex-col items-center" style={{ gap: 66 }}>
                 <div
                   className="relative rounded-12 px-12px py-4px"
                   style={{ background: '#ffd38c', animation: 'vault-egg-bounce 2.2s ease-in-out infinite' }}
