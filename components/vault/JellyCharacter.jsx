@@ -8,7 +8,9 @@
 import { useRef, useState } from 'react';
 import Image from 'next/image';
 
-export default function JellyCharacter({ src, alt, tint, onInteract }) {
+// widthVw/maxWidthPx: 화면별로 크기를 다르게 쓰고 싶을 때만 넘긴다(기본값 = 기존 스펙 그대로,
+// VaultOnboarding·InviteDraw는 그대로 유지되고 ConstellationDetail만 더 크게 지정해서 쓴다).
+export default function JellyCharacter({ src, alt, tint, onInteract, widthVw = 62, maxWidthPx = 300 }) {
   const [pos, setPos] = useState({ x: 0, y: 0 });
   const [held, setHeld] = useState(false);
   const [punch, setPunch] = useState(0);
@@ -68,8 +70,10 @@ export default function JellyCharacter({ src, alt, tint, onInteract }) {
         }}
       />
       <div
-        className="relative w-[62vw] max-w-[300px]"
+        className="relative"
         style={{
+          width: `${widthVw}vw`,
+          maxWidth: maxWidthPx,
           transform: `translate(${pos.x}px, ${pos.y + 56}px)`,
           transition: held ? 'none' : 'transform 0.55s cubic-bezier(0.34,1.56,0.64,1)',
         }}
@@ -78,8 +82,8 @@ export default function JellyCharacter({ src, alt, tint, onInteract }) {
           key={`jelly-${punch}`} // 탭마다 리마운트해서 눌림 애니메이션을 처음부터 다시 재생
           src={src}
           alt={alt}
-          width={300}
-          height={300}
+          width={maxWidthPx}
+          height={maxWidthPx}
           draggable={false}
           onPointerDown={down}
           onPointerMove={move}

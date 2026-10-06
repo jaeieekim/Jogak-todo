@@ -76,10 +76,11 @@ function remainingSteps(todo) {
 
 // 개발용 미리보기: /?carryoverDemo=1 — 실제 로컬스토리지 상태와 무관하게 이어가기 박스를 항상 고정된 예시로 보여준다.
 // 디자인 확인·캡처용(보관소의 ?preview=full과 동일한 목적). 실제 유저 데이터는 전혀 건드리지 않는다.
+// steps는 실제 앱과 동일하게 항상 2개(미니스텝 생성 스펙) — 도트는 여기에 본체 체크 1개를 더해 3개(●●○)로 표시된다.
 const DEMO_CARRYOVER_CANDIDATES = [
-  { dateKey: 'demo', todo: { id: 'demo-1', text: '단어외우기', steps: [{ checked: true }, { checked: true }, { checked: false }], originalChecked: false } },
-  { dateKey: 'demo', todo: { id: 'demo-2', text: '방 청소하기', steps: [{ checked: true }, { checked: false }, { checked: false }], originalChecked: false } },
-  { dateKey: 'demo', todo: { id: 'demo-3', text: '책상에 앉아서 영어 교재 펼치기', steps: [{ checked: false }, { checked: false }, { checked: false }, { checked: false }], originalChecked: false } },
+  { dateKey: 'demo', todo: { id: 'demo-1', text: '단어외우기', steps: [{ checked: true }, { checked: true }], originalChecked: false } },
+  { dateKey: 'demo', todo: { id: 'demo-2', text: '방 청소하기', steps: [{ checked: true }, { checked: false }], originalChecked: false } },
+  { dateKey: 'demo', todo: { id: 'demo-3', text: '책상에 앉아서 영어 교재 펼치기', steps: [{ checked: false }, { checked: false }], originalChecked: false } },
 ];
 
 // 로딩 연출 최소 노출 시간 — 생성이 순식간에 끝나도 연출이 인지되도록 보장 (md 섹션 7-1).
@@ -294,7 +295,8 @@ export default function HomePage() {
     for (let n = 1; n <= 3; n++) {
       const dateKey = toDateKey(addDays(today, -n));
       for (const t of todosByDate[dateKey] || []) {
-        if (!isTodoComplete(t)) result.push({ dateKey, todo: t });
+        // carriedOver: 예전에 이어가기 칩으로 이미 오늘(또는 다른 날) 목록에 복사해둔 원본 — 다시 후보로 띄우지 않는다
+        if (!isTodoComplete(t) && !t.carriedOver) result.push({ dateKey, todo: t });
       }
     }
     // 미니스텝이 가장 적게 남은 것부터 — 조금만 더 하면 끝나는 걸 먼저 보여준다
@@ -354,8 +356,13 @@ export default function HomePage() {
       originalChecked: false,
       lastStrategy: result.strategy,
     };
-    // 원본(예전 날짜)은 그대로 두고, 오늘 날짜에 새 할 일로 복사해서 추가 — 오늘 보고 있는 화면 기준이라 todos/setTodosForSelected 그대로 사용 가능
-    setTodosForSelected([newTodo, ...todos]);
+    // 오늘 날짜에 새 할 일로 복사해서 추가하고, 원본(예전 날짜)에는 carriedOver 표시를 남겨 다시 후보로 안 뜨게 한다
+    // (두 날짜를 한 번에 갱신해야 새로고침 후에도 "이미 골랐음"이 유지된다 — todosByDate가 Single Source of Truth)
+    setTodosByDate((prev) => ({
+      ...prev,
+      [todayKeyForCarryover]: [newTodo, ...(prev[todayKeyForCarryover] || [])],
+      [dateKey]: (prev[dateKey] || []).map((t) => (t.id === todo.id ? { ...t, carriedOver: true } : t)),
+    }));
     track(EVENTS.MINISTEP_GENERATED, { strategy: result.strategy });
 
     setCarryoverLoadingKey(null);
@@ -869,7 +876,11 @@ export default function HomePage() {
                       ) : (
                         <>
                           {todo.text}
-                          <ProgressDots filled={checkedSteps} total={todo.steps.length} />
+                          {/* 본체 체크까지 포함해 3개(●●○) — TodoCard 헤더 도트와 동일 공식 */}
+                          <ProgressDots
+                            filled={checkedSteps + (todo.originalChecked ? 1 : 0)}
+                            total={todo.steps.length + 1}
+                          />
                         </>
                       )}
                     </button>

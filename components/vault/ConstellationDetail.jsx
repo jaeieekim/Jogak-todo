@@ -111,9 +111,12 @@ export default function ConstellationDetail({ c, onBack }) {
         </svg>
       </button>
 
+      {/* 상세보기는 캐릭터가 화면의 주인공이라 기본값(62vw/300px)보다 크게 — 다른 화면(온보딩·뽑기)은 기본값 그대로 */}
       <JellyCharacter
         src={JELLY_SRC_BY_KEY[c.catalogKey] ?? JELLY_SRC_DEFAULT}
         alt={`${c.name}의 젤리 캐릭터`}
+        widthVw={72}
+        maxWidthPx={360}
       />
 
       <div className="relative z-20 px-6 text-center" style={{ paddingBottom: 'calc(128px + env(safe-area-inset-bottom))' }}>
