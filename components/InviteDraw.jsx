@@ -115,7 +115,7 @@ export default function InviteDraw({ autoStart = false, onDraw, onDone }) {
   const headline = phase === 'idle' ? HEADLINE.idle : HEADLINE.cracking;
 
   return (
-    <div className="relative flex min-h-[100dvh] w-full touch-manipulation flex-col items-center overflow-hidden px-24px text-center">
+    <div className="relative flex h-full w-full touch-manipulation flex-col items-center overflow-hidden px-24px text-center">
       {/* 보관소 Galaxy.jsx와 동일한 은하수 배경 */}
       <div
         className="absolute inset-0 -z-10"

@@ -55,32 +55,36 @@ export default function InviteClient({ code }) {
 
   if (checking) return null;
 
-  if (existingUser) {
-    return (
-      <div
-        className="flex min-h-[100dvh] w-full flex-col items-center justify-center gap-20px px-24px text-center"
-        style={{ background: 'var(--color-vault-sky-deep)' }}
-      >
-        <p className="text-vault-13" style={{ color: 'var(--color-vault-white)' }}>
-          이미 계정이 있어요! 이 선물은 최초 공유와 최초 가입 시에 한 번만 받을 수 있어요.
-        </p>
-        <button
-          type="button"
-          onClick={() => router.push('/vault')}
-          className="rounded-12 px-20px py-[14px] text-15 font-medium transition active:scale-[0.98]"
-          style={{ background: 'var(--color-vault-amber)', color: 'var(--color-vault-black)' }}
-        >
-          보관소로 돌아가기
-        </button>
-      </div>
-    );
-  }
-
+  // 보관소(app/vault/page.jsx)와 동일한 틀: 웹에서는 바깥(전체폭, 어두운 레터박스) + 안쪽 440px 프레임으로
+  // 모바일 폭을 유지한다 — 이 틀이 없으면 데스크톱 웹에서 풀스크린으로 늘어나 버린다.
   return (
-    <InviteDraw
-      autoStart={resumeAfterLogin}
-      onDraw={handleDraw}
-      onDone={() => router.push('/vault?from=invite')}
-    />
+    <div className="flex min-h-[100dvh] w-full items-stretch justify-center" style={{ background: 'var(--color-vault-black)' }}>
+      <div className="relative h-[100dvh] w-full max-w-[440px] overflow-hidden">
+        {existingUser ? (
+          <div
+            className="flex h-full w-full flex-col items-center justify-center gap-20px px-24px text-center"
+            style={{ background: 'var(--color-vault-sky-deep)' }}
+          >
+            <p className="text-vault-13" style={{ color: 'var(--color-vault-white)' }}>
+              이미 계정이 있어요! 이 선물은 최초 공유와 최초 가입 시에 한 번만 받을 수 있어요.
+            </p>
+            <button
+              type="button"
+              onClick={() => router.push('/vault')}
+              className="rounded-12 px-20px py-[14px] text-15 font-medium transition active:scale-[0.98]"
+              style={{ background: 'var(--color-vault-amber)', color: 'var(--color-vault-black)' }}
+            >
+              보관소로 돌아가기
+            </button>
+          </div>
+        ) : (
+          <InviteDraw
+            autoStart={resumeAfterLogin}
+            onDraw={handleDraw}
+            onDone={() => router.push('/vault?from=invite')}
+          />
+        )}
+      </div>
+    </div>
   );
 }
