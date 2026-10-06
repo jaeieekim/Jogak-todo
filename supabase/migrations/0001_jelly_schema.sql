@@ -266,5 +266,5 @@ insert into public.constellation_catalog (sort_order, key, name, caption, piece_
   (12, 'squirrel',  '다람쥐자리',     '도토리를 모으며',       9),
   (13, 'chick',     '병아리자리',     '갓 깨어난 봄',          9),
   (14, 'dino',      '공룡자리',       '먼 옛날의 발자국',      9),
-  (15, 'sheep',     '양자리',         '포근한 구름 한 조각',   9),
+  (15, 'sheep',     '작은양자리',     '포근한 구름 한 조각',   9),
   (16, 'dog',       '강아지자리',     null,                    9);
