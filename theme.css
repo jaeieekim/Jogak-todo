@@ -182,19 +182,15 @@ html {
   78% { transform: scale(1.03, 1.02); }
   100% { transform: scale(1, 1); }
 }
-/* 탭한 자리 주변만 더 세게 반응하는 레이어용 — vault-jelly-punch와 같은 리듬, 진폭만 더 크게 */
-@keyframes vault-jelly-punch-strong {
-  0% { transform: scale(1, 1); }
-  16% { transform: scale(0.72, 0.72); }
-  38% { transform: scale(1.16, 1.1); }
-  58% { transform: scale(0.9, 0.94); }
-  78% { transform: scale(1.05, 1.03); }
-  100% { transform: scale(1, 1); }
-}
 @keyframes vault-dent-fade {
   0% { opacity: 0.55; transform: translate(-50%, -50%) scale(0.5); }
   30% { opacity: 0.5; transform: translate(-50%, -50%) scale(0.9); }
   100% { opacity: 0; transform: translate(-50%, -50%) scale(1.5); }
+}
+/* 탭 지점에서 퍼지는 얇은 링 — 이미지를 겹치지 않고 장식 도형만으로 "여기를 눌렀다"를 표현 */
+@keyframes vault-tap-ring {
+  0% { opacity: 0.6; transform: translate(-50%, -50%) scale(0.6); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(2.4); }
 }
 /* 보관소 온보딩2의 "Touch!" 힌트 깜빡임 (Figma node 96:15) */
 @keyframes vault-touch-blink {

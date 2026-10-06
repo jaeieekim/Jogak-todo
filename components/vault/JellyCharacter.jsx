@@ -107,25 +107,11 @@ export default function JellyCharacter({ src, alt, tint, onInteract, widthVw = 6
           }}
         />
         {punch > 0 && (
+          // 이미지를 하나 더 겹쳐서 탭 지점만 따로 반응시켰더니, 움직이는 동안 두 장이 살짝 어긋나며
+          // 겹쳐 보이는(난시처럼 겹쳐 보이는) 문제가 있었음 — 이미지 복제 자체를 그만두고, 캐릭터는
+          // 원본 한 장이 transform-origin(탭 지점)을 축으로 자연스럽게 전체 반응하는 것에만 맡기고,
+          // "여기를 눌렀다"는 국소 신호는 이미지가 아닌 장식용 도장(ping) 효과로만 표현한다.
           <>
-            {/* 탭한 자리 주변만 더 세게 반응 — clip-path(원형 잘라내기)로 경계가 뚝 끊기지 않도록,
-                부드러운 radial-gradient 마스크로 가장자리가 자연스럽게 사라지게(페더링) 처리.
-                바닥(위 Image)은 전체가 약하게, 이 레이어는 탭 지점 근처만 강하게 — 둘이 자연스럽게 겹침. */}
-            <img
-              key={`wobble-${punch}`}
-              src={src}
-              alt=""
-              aria-hidden="true"
-              draggable={false}
-              className="no-ios-callout pointer-events-none absolute inset-0 block w-full select-none"
-              style={{
-                WebkitMaskImage: `radial-gradient(circle at ${tap.x}% ${tap.y}%, black 0%, black 22%, transparent 65%)`,
-                maskImage: `radial-gradient(circle at ${tap.x}% ${tap.y}%, black 0%, black 22%, transparent 65%)`,
-                transformOrigin: `${tap.x}% ${tap.y}%`,
-                animation: 'vault-jelly-punch-strong 0.55s cubic-bezier(0.34,1.56,0.64,1)',
-                filter: `${tint ? tint + ' ' : ''}drop-shadow(0 18px 40px color-mix(in srgb, var(--color-vault-black) 55%, transparent)) drop-shadow(0 0 26px color-mix(in srgb, var(--color-vault-amber) 25%, transparent))`,
-              }}
-            />
             <span
               key={`dent-${punch}`}
               className="pointer-events-none absolute"
@@ -139,6 +125,19 @@ export default function JellyCharacter({ src, alt, tint, onInteract, widthVw = 6
                   'radial-gradient(closest-side, color-mix(in srgb, var(--color-vault-black) 58%, transparent), color-mix(in srgb, var(--color-vault-black) 26%, transparent) 55%, transparent 72%)',
                 mixBlendMode: 'multiply',
                 animation: 'vault-dent-fade 0.5s ease-out forwards',
+              }}
+            />
+            {/* 탭 지점에서 퍼지는 얇은 링 — 이미지가 아니라 장식 도형이라 겹침/어긋남 걱정 없음 */}
+            <span
+              key={`ring-${punch}`}
+              className="pointer-events-none absolute rounded-full"
+              style={{
+                left: `${tap.x}%`,
+                top: `${tap.y}%`,
+                width: '14%',
+                height: '14%',
+                border: '2px solid color-mix(in srgb, var(--color-vault-white) 70%, transparent)',
+                animation: 'vault-tap-ring 0.5s ease-out forwards',
               }}
             />
           </>
