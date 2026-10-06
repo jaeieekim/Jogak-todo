@@ -20,7 +20,7 @@ export default function ClaimClient() {
   // 보관소(app/vault/page.jsx)와 동일한 틀 — 웹에서 풀스크린으로 늘어나지 않게 440px 프레임으로 감싼다.
   return (
     <div className="flex min-h-[100dvh] w-full items-stretch justify-center" style={{ background: 'var(--color-vault-black)' }}>
-      <div className="relative h-[100dvh] w-full max-w-[440px] overflow-hidden">
+      <div className="relative isolate h-[100dvh] w-full max-w-[440px] overflow-hidden">
         <InviteDraw onDraw={handleDraw} onDone={() => router.push('/vault?from=invite')} />
       </div>
     </div>

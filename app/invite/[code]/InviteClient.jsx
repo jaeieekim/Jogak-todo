@@ -59,7 +59,7 @@ export default function InviteClient({ code }) {
   // 모바일 폭을 유지한다 — 이 틀이 없으면 데스크톱 웹에서 풀스크린으로 늘어나 버린다.
   return (
     <div className="flex min-h-[100dvh] w-full items-stretch justify-center" style={{ background: 'var(--color-vault-black)' }}>
-      <div className="relative h-[100dvh] w-full max-w-[440px] overflow-hidden">
+      <div className="relative isolate h-[100dvh] w-full max-w-[440px] overflow-hidden">
         {existingUser ? (
           <div
             className="flex h-full w-full flex-col items-center justify-center gap-20px px-24px text-center"
