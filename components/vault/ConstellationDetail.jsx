@@ -116,8 +116,8 @@ export default function ConstellationDetail({ c, onBack }) {
       <JellyCharacter
         src={JELLY_SRC_BY_KEY[c.catalogKey] ?? JELLY_SRC_DEFAULT}
         alt={`${c.name}의 젤리 캐릭터`}
-        widthVw={72}
-        maxWidthPx={360}
+        widthVw={78}
+        maxWidthPx={390}
       />
 
       <div className="relative z-20 px-6 text-center" style={{ paddingBottom: 'calc(128px + env(safe-area-inset-bottom))' }}>
