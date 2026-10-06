@@ -148,11 +148,9 @@ export default function InviteDraw({ autoStart = false, onDraw, onDone }) {
 
           {/* justify-start로 바꿔 egg를 헤드라인 바로 아래(위쪽)에 고정 — justify-center면 카드가 커질수록 아래로 밀림 */}
           <div className="relative z-10 flex flex-1 flex-col items-center justify-start">
-            {/* mx-[-24px]: 루트의 px-24px 패딩을 상쇄해서 알이 화면 가장자리까지 번지게(bleed) —
-                400px는 390px 폭 기기에서 패딩 상쇄 없이는 그대로 잘려나가는 걸 실측으로 확인해서 뺀 값.
-                egg.png는 원본의 불필요한 투명 여백을 잘라내(크롭) 같은 380px 폭이어도 실제 알이
-                훨씬 크게 보이도록 리사이즈함(아래 EggCracks 주석 참고) */}
-            <div className="relative mx-[-24px]" style={{ width: 380, height: 427 }}>
+            {/* egg.png는 원본의 불필요한 투명 여백을 크롭해둔 상태라, 이 width/height가
+                곧 체감 알 크기와 거의 비례한다(과거처럼 박스만 커지고 알은 그대로인 문제 없음) */}
+            <div className="relative" style={{ width: 300, height: 337 }}>
               {showEgg && (
                 <button
                   type="button"
@@ -175,7 +173,7 @@ export default function InviteDraw({ autoStart = false, onDraw, onDone }) {
                     </>
                   ) : (
                     <div className="relative">
-                      <Image src="/invite/egg.png" alt="" width={380} height={427} priority />
+                      <Image src="/invite/egg.png" alt="" width={300} height={337} priority />
                       <EggCracks count={cracks} />
                     </div>
                   )}
@@ -186,11 +184,11 @@ export default function InviteDraw({ autoStart = false, onDraw, onDone }) {
             </div>
 
             {/* 말풍선 — 알 "컨테이너"가 아니라 "실제로 보이는 알 모양" 기준 24px 아래.
-                egg.png를 투명 여백 없이 크롭한 뒤 다시 실측(픽셀 스캔)해서 보정한 값.
+                egg.png를 투명 여백 없이 크롭한 뒤 다시 실측(픽셀 스캔)해서 보정한 값(크기 바뀌면 재계산 필요).
                 알과 같은 리듬(vault-egg-bounce 2.2s, 같은 keyframe)으로 같이 움직이게 — 이전엔
                 말풍선만 1.8s라 서로 박자가 어긋났었음 */}
             {phase === 'idle' && (
-              <div className="mt-[-15px] flex flex-col items-center gap-48px">
+              <div className="mt-[-7px] flex flex-col items-center gap-48px">
                 <div
                   className="relative rounded-12 px-12px py-4px"
                   style={{ background: '#ffd38c', animation: 'vault-egg-bounce 2.2s ease-in-out infinite' }}
@@ -314,8 +312,8 @@ function EggCracks({ count }) {
   ];
   return (
     <svg
-      width={380}
-      height={427}
+      width={300}
+      height={337}
       viewBox="0 0 578 650"
       className="pointer-events-none absolute inset-0"
     >
@@ -341,7 +339,7 @@ function EggHalf({ which }) {
       : 'polygon(0 50%, 20% 47%, 40% 52%, 60% 46%, 80% 50%, 100% 45%, 100% 100%, 0 100%)';
   // 알 확대(원본 320→400, ×1.25) 비율에 맞춰 흩어지는 거리도 같이 키움
   // 알 확대(원본 320→380, ×1.1875) 비율에 맞춰 흩어지는 거리도 같이 키움
-  const targetTransform = which === 'top' ? 'translate(-21px, -40px) rotate(-10deg)' : 'translate(19px, 36px) rotate(8deg)';
+  const targetTransform = which === 'top' ? 'translate(-17px, -32px) rotate(-10deg)' : 'translate(15px, 28px) rotate(8deg)';
 
   return (
     <div
@@ -352,7 +350,7 @@ function EggHalf({ which }) {
         opacity: out ? 0 : 1,
       }}
     >
-      <Image src="/invite/egg.png" alt="" width={380} height={427} />
+      <Image src="/invite/egg.png" alt="" width={300} height={337} />
     </div>
   );
 }
