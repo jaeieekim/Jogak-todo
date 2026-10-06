@@ -139,14 +139,17 @@ export default function InviteDraw({ autoStart = false, onDraw, onDone }) {
         </div>
       ) : phase !== 'result' ? (
         <>
-          {/* 알을 키우면서 생긴 높이 증가분(+60px)만큼 상단 여백을 줄여 작은 화면에서도 안 잘리게 함 */}
-          <h1 className="relative z-10 pt-[64px] text-vault-26 font-bold" style={{ color: 'var(--color-vault-foreground)' }}>
+          {/* 알이 커진 만큼 상단 여백을 토큰값으로 더 줄여서 egg를 위로 당기고, 작은 화면에서도 안 잘리게 함 */}
+          <h1 className="relative z-10 pt-32px text-vault-26 font-bold" style={{ color: 'var(--color-vault-foreground)' }}>
             <span className="block whitespace-nowrap">{headline[0]}</span>
             <span className="block whitespace-nowrap">{headline[1]}</span>
           </h1>
 
-          <div className="relative z-10 flex flex-1 flex-col items-center justify-center gap-24px">
-            <div className="relative" style={{ width: 360, height: 396 }}>
+          {/* justify-start로 바꿔 egg를 헤드라인 바로 아래(위쪽)에 고정 — justify-center면 카드가 커질수록 아래로 밀림 */}
+          <div className="relative z-10 flex flex-1 flex-col items-center justify-start">
+            {/* mx-[-24px]: 루트의 px-24px 패딩을 상쇄해서 알이 화면 가장자리까지 번지게(bleed) —
+                400px는 390px 폭 기기에서 패딩 상쇄 없이는 그대로 잘려나가는 걸 실측으로 확인해서 뺀 값 */}
+            <div className="relative mx-[-24px]" style={{ width: 380, height: 418 }}>
               {showEgg && (
                 <button
                   type="button"
@@ -169,7 +172,7 @@ export default function InviteDraw({ autoStart = false, onDraw, onDone }) {
                     </>
                   ) : (
                     <div className="relative">
-                      <Image src="/invite/egg.png" alt="" width={360} height={396} priority />
+                      <Image src="/invite/egg.png" alt="" width={380} height={418} priority />
                       <EggCracks count={cracks} />
                     </div>
                   )}
@@ -179,10 +182,11 @@ export default function InviteDraw({ autoStart = false, onDraw, onDone }) {
               {phase === 'bursting' && <Orbs out={orbsOut} />}
             </div>
 
+            {/* 말풍선 — 알 바로 아래 24px(margin-top, flex gap에 묻히지 않게 명시적으로) */}
             {phase === 'idle' && (
-              <div className="flex flex-col items-center gap-12px">
+              <div className="mt-24px flex flex-col items-center gap-12px">
                 <div
-                  className="relative rounded-12 px-12px py-12px"
+                  className="relative rounded-12 px-12px py-8px"
                   style={{ background: '#ffd38c', animation: 'vault-egg-bounce 1.8s ease-in-out infinite' }}
                 >
                   <span className="text-15 font-semibold" style={{ color: '#000' }}>여기를 눌러보세요</span>
@@ -303,8 +307,8 @@ function EggCracks({ count }) {
   ];
   return (
     <svg
-      width={360}
-      height={396}
+      width={380}
+      height={418}
       viewBox="0 0 220 251"
       className="pointer-events-none absolute inset-0"
     >
@@ -328,8 +332,9 @@ function EggHalf({ which }) {
     which === 'top'
       ? 'polygon(0 0, 100% 0, 100% 45%, 80% 50%, 60% 46%, 40% 52%, 20% 47%, 0 50%)'
       : 'polygon(0 50%, 20% 47%, 40% 52%, 60% 46%, 80% 50%, 100% 45%, 100% 100%, 0 100%)';
-  // 알 확대(320→360, ×1.125) 비율에 맞춰 흩어지는 거리도 같이 키움
-  const targetTransform = which === 'top' ? 'translate(-20px, -38px) rotate(-10deg)' : 'translate(18px, 34px) rotate(8deg)';
+  // 알 확대(원본 320→400, ×1.25) 비율에 맞춰 흩어지는 거리도 같이 키움
+  // 알 확대(원본 320→380, ×1.1875) 비율에 맞춰 흩어지는 거리도 같이 키움
+  const targetTransform = which === 'top' ? 'translate(-21px, -40px) rotate(-10deg)' : 'translate(19px, 36px) rotate(8deg)';
 
   return (
     <div
@@ -340,7 +345,7 @@ function EggHalf({ which }) {
         opacity: out ? 0 : 1,
       }}
     >
-      <Image src="/invite/egg.png" alt="" width={360} height={396} />
+      <Image src="/invite/egg.png" alt="" width={380} height={418} />
     </div>
   );
 }
