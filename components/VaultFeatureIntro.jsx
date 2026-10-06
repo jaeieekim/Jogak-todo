@@ -22,18 +22,19 @@ export default function VaultFeatureIntro({ onClose, onView }) {
         style={{ background: 'rgba(0,0,0,0.6)' }}
       />
 
-      {/* 카드 */}
+      {/* 카드 — Figma 기준 330px, 헤딩 top 48px/닫기 top·right 24px 그대로 */}
       <div className="absolute left-1/2 top-1/2 z-10 w-[330px] max-w-[calc(100vw-48px)] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-24 bg-bg-default shadow-[0_8px_24px_rgba(25,31,40,0.08)]">
         <button
           type="button"
           aria-label="닫기"
           onClick={onClose}
-          className="absolute right-20px top-20px z-10 flex h-24px w-24px items-center justify-center text-text-dim"
+          className="absolute z-10 flex h-24px w-24px items-center justify-center text-text-dim"
+          style={{ top: 'var(--spacing-24)', right: 'var(--spacing-24)' }}
         >
           <CloseIcon size={16} />
         </button>
 
-        <h2 className="px-24px pt-44px text-center text-17 font-bold text-text-primary">
+        <h2 className="px-24px pt-48px text-center text-17 font-bold text-text-primary">
           캐릭터 젤리 보관소가 생겼어요!
         </h2>
 
@@ -59,27 +60,32 @@ export default function VaultFeatureIntro({ onClose, onView }) {
         </div>
       </div>
 
-      {/* 손글씨 화살표 — 카드에서 하단 네비 "보관소" 쪽을 가리킴 (피그마 원본 SVG·회전값 그대로, 문서화된 예외) */}
-      <div className="pointer-events-none fixed z-10" style={{ right: '16%', bottom: '72px', transform: 'rotate(68.26deg)' }}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/vault-intro/arrow.svg" alt="" width={100} height={41} />
-      </div>
-
-      {/* 네비바 "보관소" 탭만 딤 위로 다시 그려서 돋보이게 — 실제로 눌리는 버튼(보관소로 이동) */}
+      {/* 하단 영역 — 화살표와 "보관소" 탭 하이라이트를 같은 max-w-[480px] 프레임 안에 묶어서
+          데스크톱 웹(레터박스)에서도 실제 네비(동일 프레임)와 정렬이 어긋나지 않게 한다.
+          (이전 버전은 화살표를 뷰포트 기준 fixed(right:16%)로 둬서 넓은 화면에서 보관소를 벗어났음) */}
       <div className="pointer-events-none fixed inset-x-0 bottom-0 z-50">
-        <div className="mx-auto flex h-[56px] w-full max-w-[480px]">
-          <div className="flex-1" aria-hidden />
-          <button
-            type="button"
-            onClick={() => {
-              onView();
-              router.push('/vault');
-            }}
-            className="pointer-events-auto flex flex-1 flex-col items-center justify-center gap-4px text-brand-primary"
-          >
-            <VaultIcon />
-            <span className="text-12 font-medium">보관소</span>
-          </button>
+        <div className="relative mx-auto h-[56px] w-full max-w-[480px]">
+          {/* 손글씨 화살표 — 카드에서 "보관소" 쪽을 가리킴 (피그마 원본 SVG·회전값 그대로, 문서화된 예외) */}
+          <div className="absolute" style={{ right: '16%', bottom: '72px', transform: 'rotate(68.26deg)' }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/vault-intro/arrow.svg" alt="" width={100} height={41} />
+          </div>
+
+          {/* 네비바 "보관소" 탭만 딤 위로 다시 그려서 돋보이게 — 실제로 눌리는 버튼(보관소로 이동) */}
+          <div className="flex h-full w-full">
+            <div className="flex-1" aria-hidden />
+            <button
+              type="button"
+              onClick={() => {
+                onView();
+                router.push('/vault');
+              }}
+              className="pointer-events-auto flex flex-1 flex-col items-center justify-center gap-4px text-brand-primary"
+            >
+              <VaultIcon />
+              <span className="text-12 font-medium">보관소</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
