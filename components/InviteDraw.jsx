@@ -308,12 +308,10 @@ export default function InviteDraw({ autoStart = false, onDraw, onDone }) {
 // 알 금 간 자국 — 탭 횟수(1~3)만큼 점점 늘어난다. 간단한 지그재그 선, 새 에셋 없이 SVG로 직접 그림.
 function EggCracks({ count }) {
   if (count === 0) return null;
-  // 알 타원 안쪽에만 머물도록 가로 폭을 좁힘(x:98~128, center 110 기준 ±15) — 바깥으로 안 나가게
-  const paths = [
-    'M100 90 L108 110 L98 125 L106 145',
-    'M115 95 L108 115 L118 130 L110 150',
-    'M125 100 L118 120 L128 135 L120 155',
-  ];
+  // 선 하나가 탭할 때마다 1/3씩 길어져서 3번째 탭에 알을 가로질러 완전히 금이 가도록 —
+  // stroke-dasharray/dashoffset로 "그려지는 길이"만 조절(선은 계속 하나, 끊어서 여러 개 안 그림).
+  // 알 타원 가로 폭 안쪽에만 머물도록 x:65~154 범위로 제한(바깥으로 안 나가게).
+  const progress = count / CRACKS_TO_BREAK; // 1/3, 2/3, 1
   return (
     <svg
       width={493}
@@ -321,9 +319,18 @@ function EggCracks({ count }) {
       viewBox="0 0 220 251"
       className="pointer-events-none absolute inset-0"
     >
-      {paths.slice(0, count).map((d, i) => (
-        <path key={i} d={d} fill="none" stroke="rgba(25,31,40,0.45)" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
-      ))}
+      <path
+        d="M65 128 L85 120 L105 132 L125 118 L140 130 L154 122"
+        fill="none"
+        stroke="rgba(25,31,40,0.45)"
+        strokeWidth={2.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        pathLength={100}
+        strokeDasharray={100}
+        strokeDashoffset={100 * (1 - progress)}
+        style={{ transition: 'stroke-dashoffset 0.3s ease-out' }}
+      />
     </svg>
   );
 }
