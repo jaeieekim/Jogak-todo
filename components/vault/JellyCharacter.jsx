@@ -72,6 +72,7 @@ export default function JellyCharacter({ src, alt, tint, onInteract, widthVw = 6
           background: 'radial-gradient(closest-side, color-mix(in srgb, var(--color-vault-amber) 28%, transparent), transparent)',
           filter: 'blur(6px)',
           transform: `translateX(${pos.x * 0.4}px) scale(${1 - stretchY})`,
+          transition: held ? 'none' : 'transform 0.55s cubic-bezier(0.34,1.56,0.64,1)',
         }}
       />
       <div
@@ -97,13 +98,19 @@ export default function JellyCharacter({ src, alt, tint, onInteract, widthVw = 6
           className="no-ios-callout block w-full touch-none select-none cursor-grab active:cursor-grabbing"
           style={{
             transformOrigin: `${tap.x}% ${tap.y}%`,
-            transform: held ? `rotate(${angle}deg) scale(${scaleX}, ${scaleY})` : undefined,
-            // 원래처럼 전체가 자연스럽게 반응(약하게) — 탭한 자리 주변은 아래 레이어가 덧씌워져 더 세게 반응
+            transform: held ? `rotate(${angle}deg) scale(${scaleX}, ${scaleY})` : 'rotate(0deg) scale(1, 1)',
+            // 놓는 순간 position(위 div의 translate)이랑 같은 바운스 커브로 scale도 같이 튕기며 돌아오게 —
+            // 전엔 scale에 transition이 없어서 position만 탱글하게 돌아오고 모양은 순간적으로 스냅됐었음
+            transition: held ? 'none' : 'transform 0.55s cubic-bezier(0.34,1.56,0.64,1)',
+            // 원래처럼 전체가 자연스럽게 반응(약하게) — 탭한 자리 주변은 아래 레이어가 덧씌워져 더 세게 반응.
+            // idle 애니메이션은 release 직후 0.55s는 일부러 비워둔다 — animation과 transition이 같은
+            // transform 속성을 동시에 건드리면 animation이 이겨서 위 release 바운스 transition이 아예
+            // 안 보이던 버그가 있었음(순간 스냅처럼 느껴진 원인). 0.55s 지연시켜 바운스가 끝난 뒤 인계.
             animation: held
               ? 'none'
               : punch > 0
                 ? 'vault-jelly-punch 0.55s cubic-bezier(0.34,1.56,0.64,1), vault-squish-idle 3.4s ease-in-out 0.55s infinite'
-                : 'vault-squish-idle 3.4s ease-in-out infinite',
+                : 'vault-squish-idle 3.4s ease-in-out 0.55s infinite',
             filter: `${tint ? tint + ' ' : ''}drop-shadow(0 18px 40px color-mix(in srgb, var(--color-vault-black) 55%, transparent)) drop-shadow(0 0 26px color-mix(in srgb, var(--color-vault-amber) 25%, transparent))`,
             WebkitUserSelect: 'none',
             // iOS 사파리는 user-select만으론 안 막히고 이 속성을 따로 꺼야 길게 눌렀을 때
