@@ -120,7 +120,7 @@ export default function ConstellationDetail({ c, onBack }) {
         maxWidthPx={390}
       />
 
-      <div className="relative z-20 px-6 text-center" style={{ paddingBottom: 'calc(128px + env(safe-area-inset-bottom))' }}>
+      <div className="relative z-20 px-6 text-center" style={{ paddingBottom: 'calc(112px + env(safe-area-inset-bottom))' }}>
         {c.caption && (
           <p className="text-vault-13" style={{ color: 'var(--color-vault-muted-foreground)' }}>
             {c.caption}
