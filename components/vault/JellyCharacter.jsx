@@ -96,7 +96,11 @@ export default function JellyCharacter({ src, alt, tint, onInteract, widthVw = 6
           onPointerCancel={up}
           className="no-ios-callout block w-full touch-none select-none cursor-grab active:cursor-grabbing"
           style={{
-            transformOrigin: `${tap.x}% ${tap.y}%`,
+            // 드래그 중엔 항상 정중앙을 축으로 늘어나야 좌우가 대칭으로 보인다 — 예전엔 "마지막 탭 위치"
+            // (tap.x/y, 탭할 때마다 중심이 아닐 수 있음)를 그대로 썼더니, 중심이 아닌 쪽으로 치우친
+            // 축을 기준으로 돌려서-늘려서-되돌리다 보니 한쪽(예: 축에서 먼 왼쪽)만 유난히 크게
+            // 흔들리는 것처럼 보였음(탄력이 좌우 비대칭). 드래그 중엔 50%/50%로 고정.
+            transformOrigin: held ? '50% 50%' : `${tap.x}% ${tap.y}%`,
             transform: held
               ? `rotate(${pullAngleDeg}deg) scale(${1 + stretch}, ${1 - stretch * 0.55}) rotate(${-pullAngleDeg}deg)`
               : 'rotate(0deg) scale(1, 1)',
