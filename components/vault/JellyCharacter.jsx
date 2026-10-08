@@ -72,7 +72,7 @@ export default function JellyCharacter({ src, alt, tint, onInteract, widthVw = 6
           background: 'radial-gradient(closest-side, color-mix(in srgb, var(--color-vault-amber) 28%, transparent), transparent)',
           filter: 'blur(6px)',
           transform: `translateX(${pos.x * 0.4}px) scale(${1 - stretchY})`,
-          transition: held ? 'none' : 'transform 0.55s cubic-bezier(0.34,1.56,0.64,1)',
+          transition: held ? 'none' : 'transform 0.5s cubic-bezier(0.34,2.4,0.64,1)',
         }}
       />
       <div
@@ -81,7 +81,7 @@ export default function JellyCharacter({ src, alt, tint, onInteract, widthVw = 6
           width: `${widthVw}vw`,
           maxWidth: maxWidthPx,
           transform: `translate(${pos.x}px, ${pos.y + 56}px)`,
-          transition: held ? 'none' : 'transform 0.55s cubic-bezier(0.34,1.56,0.64,1)',
+          transition: held ? 'none' : 'transform 0.5s cubic-bezier(0.34,2.4,0.64,1)',
         }}
       >
         <Image
@@ -101,7 +101,7 @@ export default function JellyCharacter({ src, alt, tint, onInteract, widthVw = 6
             transform: held ? `rotate(${angle}deg) scale(${scaleX}, ${scaleY})` : 'rotate(0deg) scale(1, 1)',
             // 놓는 순간 모양이 탱글하게 되돌아오도록 — 기존 커브(1.56)는 실측해보니 오버슈트가 1%도 안
             // 될 만큼 미미해서 거의 안 느껴졌음. 되돌아오는 탄성을 눈에 띄게 키움(3.4) + 살짝 더 빠르게.
-            transition: held ? 'none' : 'transform 0.45s cubic-bezier(0.34,3.4,0.64,1)',
+            transition: held ? 'none' : 'transform 0.5s cubic-bezier(0.34,5.2,0.64,1)',
             // 원래처럼 전체가 자연스럽게 반응(약하게) — 탭한 자리 주변은 아래 레이어가 덧씌워져 더 세게 반응.
             // idle 애니메이션은 release 직후 0.55s는 일부러 비워둔다 — animation과 transition이 같은
             // transform 속성을 동시에 건드리면 animation이 이겨서 위 release 바운스 transition이 아예
