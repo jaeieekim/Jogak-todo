@@ -50,14 +50,13 @@ export default function JellyCharacter({ src, alt, tint, onInteract, widthVw = 6
     }
   };
 
-  // 당긴 방향으로 늘어나게 — 예전엔 방향 상관없이 항상 가로로만 넓어지고(scaleX↑) 세로는 눌렸는데(scaleY↓),
-  // 위로 당겨도 가로로 퍼지는 것처럼 보이는 문제가 있었음. 이제 x/y 성분을 따로 봐서, 세로로 당기면
-  // 세로로(스트레치) 늘어나고 가로는 살짝 눌리고, 가로로 당기면 그 반대로 동작한다.
-  const stretchX = held ? Math.min(Math.abs(pos.x) / 300, 0.22) : 0;
-  const stretchY = held ? Math.min(Math.abs(pos.y) / 300, 0.22) : 0;
-  const scaleX = 1 + stretchX - stretchY * 0.5;
-  const scaleY = 1 + stretchY - stretchX * 0.5;
-  const angle = held ? pos.x / 22 : 0;
+  // 당긴 방향으로(대각선 포함 어느 각도로든) 늘어나게 — x/y를 따로 계산해 축(가로·세로)으로만
+  // 늘리면 45도 같은 대각선으로 당겼을 때 늘어나는 축이 여전히 가로/세로라 당긴 방향과 어긋나 보였다.
+  // 대신 "당긴 각도만큼 돌리기 → 그 축으로 늘리기 → 다시 되돌리기"로 늘어나는 축 자체를 당긴 방향에
+  // 맞춘다 — 어느 각도로 당기든 정확히 그 방향으로 길쭉해지고 수직 방향은 살짝 눌린다.
+  const pullDist = Math.hypot(pos.x, pos.y);
+  const pullAngleDeg = held && pullDist > 0 ? Math.atan2(pos.y, pos.x) * (180 / Math.PI) : 0;
+  const stretch = held ? Math.min(pullDist / 300, 0.26) : 0;
 
   return (
     <div className="relative flex flex-1 items-center justify-center">
@@ -71,7 +70,7 @@ export default function JellyCharacter({ src, alt, tint, onInteract, widthVw = 6
           borderRadius: '50%',
           background: 'radial-gradient(closest-side, color-mix(in srgb, var(--color-vault-amber) 28%, transparent), transparent)',
           filter: 'blur(6px)',
-          transform: `translateX(${pos.x * 0.4}px) scale(${1 - stretchY})`,
+          transform: `translateX(${pos.x * 0.4}px) scale(${1 - stretch * 0.6})`,
           transition: held ? 'none' : 'transform 0.5s cubic-bezier(0.34,2.4,0.64,1)',
         }}
       />
@@ -98,7 +97,9 @@ export default function JellyCharacter({ src, alt, tint, onInteract, widthVw = 6
           className="no-ios-callout block w-full touch-none select-none cursor-grab active:cursor-grabbing"
           style={{
             transformOrigin: `${tap.x}% ${tap.y}%`,
-            transform: held ? `rotate(${angle}deg) scale(${scaleX}, ${scaleY})` : 'rotate(0deg) scale(1, 1)',
+            transform: held
+              ? `rotate(${pullAngleDeg}deg) scale(${1 + stretch}, ${1 - stretch * 0.55}) rotate(${-pullAngleDeg}deg)`
+              : 'rotate(0deg) scale(1, 1)',
             // 놓는 순간 모양이 탱글하게 되돌아오도록 — 기존 커브(1.56)는 실측해보니 오버슈트가 1%도 안
             // 될 만큼 미미해서 거의 안 느껴졌음. 되돌아오는 탄성을 눈에 띄게 키움(3.4) + 살짝 더 빠르게.
             transition: held ? 'none' : 'transform 0.5s cubic-bezier(0.34,5.2,0.64,1)',
