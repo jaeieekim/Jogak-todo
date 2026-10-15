@@ -15,6 +15,12 @@ export default function JellyCharacter({ src, alt, tint, onInteract, widthVw = 6
   const [held, setHeld] = useState(false);
   const [punch, setPunch] = useState(0);
   const [tap, setTap] = useState({ x: 50, y: 50 });
+  // 놓는 순간 되돌아갈 "회전 목표값" — 항상 0으로 고정하면 왼쪽(180도 근처)으로 당겼다 놓을 때
+  // 180도→0도로 회전을 거의 반 바퀴 쓸고 지나가며 빙글 도는 것처럼 보임(오른쪽은 0도→0도라 거의 안
+  // 움직여서 매끄러움 — 이게 "왼쪽만 난리법석"의 진짜 원인이었음, 실측으로 확인). scale이 (1,1)이 되면
+  // rotate 값이 뭐든 최종 모양은 똑같아지므로(회전 후 등방 배율은 항등), 0 대신 "당겼던 각도와 가장
+  // 가까운 쪽"(0 또는 ±180)으로 되돌아가게 해서 회전은 거의 안 움직이고 크기만 줄어들게 한다.
+  const [releaseAngle, setReleaseAngle] = useState(0);
   const drag = useRef(null);
 
   const down = (e) => {
@@ -41,6 +47,11 @@ export default function JellyCharacter({ src, alt, tint, onInteract, widthVw = 6
   const up = (e) => {
     const tapped = !!drag.current && drag.current.moved < 8;
     drag.current = null;
+    // 놓기 직전의 당긴 각도를 기준으로, 되돌아갈 목표를 0 또는 ±180 중 더 가까운 쪽으로 — 왼쪽으로
+    // 당긴 상태(180도 근처)라면 180(부호 유지)으로 되돌아가게 해서 회전 이동 거리를 최소화한다.
+    const releaseDist = Math.hypot(pos.x, pos.y);
+    const heldAngle = releaseDist > 0 ? Math.atan2(pos.y, pos.x) * (180 / Math.PI) : 0;
+    setReleaseAngle(Math.abs(heldAngle) > 90 ? (heldAngle >= 0 ? 180 : -180) : 0);
     setHeld(false);
     setPos({ x: 0, y: 0 }); // 놓으면 원래 자리로 튕겨 돌아옴
     if (tapped) {
@@ -101,12 +112,18 @@ export default function JellyCharacter({ src, alt, tint, onInteract, widthVw = 6
             // 축을 기준으로 돌려서-늘려서-되돌리다 보니 한쪽(예: 축에서 먼 왼쪽)만 유난히 크게
             // 흔들리는 것처럼 보였음(탄력이 좌우 비대칭). 드래그 중엔 50%/50%로 고정.
             transformOrigin: held ? '50% 50%' : `${tap.x}% ${tap.y}%`,
+            // 놓였을 때 되돌아가는 회전 목표를 0으로 고정하지 않고 releaseAngle(0 또는 ±180 중 당겼던
+            // 쪽과 가까운 값)로 잡는다 — scale이 (1,1)이 되면 회전값과 무관하게 최종 모양은 항등이라
+            // 결과는 똑같지만, 전환 중 회전이 "거의 안 움직이는 경로"로만 가서 왼쪽에서도 오른쪽처럼
+            // 매끄럽게 줄어든다(자세한 원인은 releaseAngle 선언부 주석 참조).
             transform: held
               ? `rotate(${pullAngleDeg}deg) scale(${1 + stretch}, ${1 - stretch * 0.55}) rotate(${-pullAngleDeg}deg)`
-              : 'rotate(0deg) scale(1, 1)',
+              : `rotate(${releaseAngle}deg) scale(1, 1) rotate(${-releaseAngle}deg)`,
             // 놓는 순간 모양이 탱글하게 되돌아오도록 — 기존 커브(1.56)는 실측해보니 오버슈트가 1%도 안
-            // 될 만큼 미미해서 거의 안 느껴졌음. 되돌아오는 탄성을 눈에 띄게 키움(3.4) + 살짝 더 빠르게.
-            transition: held ? 'none' : 'transform 0.5s cubic-bezier(0.34,5.2,0.64,1)',
+            // 될 만큼 미미해서 거의 안 느껴졌음. 되돌아오는 탄성을 눈에 띄게 키움(3.4→5.2까지 키웠다가,
+            // 되돌아올 때 너무 많이 찌그러진다는 피드백으로 살짝 낮춤(5.2→4.3) — 탱글한 느낌은 유지하되
+            // 오버슈트 폭만 줄임.
+            transition: held ? 'none' : 'transform 0.5s cubic-bezier(0.34,4.3,0.64,1)',
             // 원래처럼 전체가 자연스럽게 반응(약하게) — 탭한 자리 주변은 아래 레이어가 덧씌워져 더 세게 반응.
             // idle 애니메이션은 release 직후 0.55s는 일부러 비워둔다 — animation과 transition이 같은
             // transform 속성을 동시에 건드리면 animation이 이겨서 위 release 바운스 transition이 아예
