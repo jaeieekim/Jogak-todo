@@ -8,8 +8,6 @@ import { useRouter } from 'next/navigation';
 import ConstellationGlyph from './ConstellationGlyph';
 import Starfield from './Starfield';
 import { panBounds, clamp, rubberband } from '../../lib/galaxyLayout';
-import { getOrCreateInviteCode } from '../../lib/jelly';
-import { track, EVENTS } from '../../lib/mixpanel';
 
 const ZOOM_MIN = 0.5;
 const ZOOM_MAX = 2.5;
@@ -24,35 +22,6 @@ export default function Galaxy({ data, onOpen }) {
   const [zoom, setZoom] = useState(1);
   const [interacting, setInteracting] = useState(false); // 드래그 팬 또는 핀치 중(둘 다 전환 애니메이션을 꺼야 해서 하나로 관리)
   const [viewport, setViewport] = useState({ w: 0, h: 0 });
-  const [shareState, setShareState] = useState('idle'); // 'idle' | 'sharing' | 'copied' — ConstellationDetail.jsx와 동일 패턴
-
-  async function handleShare() {
-    if (shareState === 'sharing') return;
-    setShareState('sharing');
-    try {
-      const code = await getOrCreateInviteCode();
-      if (!code) {
-        setShareState('idle');
-        return;
-      }
-      const url = `${window.location.origin}/invite/${code}`;
-      track(EVENTS.INVITE_CREATED, { source: 'vault_banner' });
-      if (navigator.share) {
-        await navigator.share({
-          title: '말랑말랑, 동물 젤리 선물이 도착했어요',
-          text: '알을 깨면 어떤 젤리가 나올까요?',
-          url,
-        });
-        setShareState('idle');
-      } else {
-        await navigator.clipboard.writeText(url);
-        setShareState('copied');
-        setTimeout(() => setShareState('idle'), 2000);
-      }
-    } catch {
-      setShareState('idle');
-    }
-  }
 
   const rootRef = useRef(null);
   const drag = useRef(null); // 한 손가락 팬 드래그 상태
@@ -330,18 +299,17 @@ export default function Galaxy({ data, onOpen }) {
           <span style={{ color: 'var(--color-vault-jelly-a)' }}>◎</span> {isCentered ? '최근 모은 별자리 보기' : '중앙으로 돌아가기'}
         </button>
 
-        {/* 공유 유도(초대 링크, 보상 있음) — 완성한 별자리가 하나도 없으면(공유 버튼 자체가 상세 화면에만
-            있어서 아직 맥락이 없으니) 숨김. ConstellationDetail.jsx의 공유 버튼과 같은 동작. */}
+        {/* 공유 유도(초대 링크, 보상 있음) — 누르면 최근 완성 별자리 상세로 들어가고, 실제 공유는 상세의 공유 버튼에서.
+            완성한 별자리가 하나도 없으면 들어갈 상세가 없으니 숨김. */}
         {latest && (
           <button
             type="button"
-            onClick={handleShare}
-            disabled={shareState === 'sharing'}
+            onClick={goToLatest}
             className="pointer-events-auto relative rounded-full px-4 py-1.5 text-vault-12 font-medium transition-transform active:scale-95"
             style={{ background: 'var(--color-vault-amber)', color: 'var(--color-vault-black)' }}
           >
             <span aria-hidden className="absolute left-1/2 top-0 h-8px w-8px -translate-x-1/2 -translate-y-1/2 rotate-45" style={{ background: 'var(--color-vault-amber)' }} />
-            {shareState === 'copied' ? '링크가 복사됐어요' : '🎁 공유하고 젤리 선물 받기'}
+            🎁 공유하고 젤리 선물 받기
           </button>
         )}
       </div>
