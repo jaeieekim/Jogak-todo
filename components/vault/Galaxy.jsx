@@ -300,8 +300,8 @@ export default function Galaxy({ data, onOpen }) {
         </button>
 
         {/* 공유 유도(초대 링크, 보상 있음) — 누르면 최근 완성 별자리 상세로 들어가고, 실제 공유는 상세의 공유 버튼에서.
-            완성한 별자리가 하나도 없으면 들어갈 상세가 없으니 숨김. */}
-        {latest && (
+            완성한 별자리가 하나도 없으면 들어갈 상세가 없으니 숨김. 이벤트에 이미 참여했으면(공유자당 1회) 숨김. */}
+        {latest && !data.inviteDone && (
           <button
             type="button"
             onClick={goToLatest}

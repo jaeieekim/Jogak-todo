@@ -1,9 +1,9 @@
 // "내 젤리 자랑하기" 공유 링크 — 초대 링크와는 완전히 분리된, 순수 전시용 페이지(로그인·claim 로직 없음).
-// 캐릭터별로 OG 타이틀/이미지가 다르다 — 기존 /vault/jelly-*.png 에셋을 그대로 재사용.
+// 캐릭터별로 OG 타이틀/이미지가 다르다 — 이미지는 opengraph-image.jsx가 기존 /vault/jelly-*.png 에셋으로 그린다.
 
 import Link from 'next/link';
 import Button from '../../../components/Button';
-import { characterName } from '../../../lib/encouragementCards';
+import { characterName, bragShareText } from '../../../lib/encouragementCards';
 
 const VALID_KEYS = [
   'blackcat', 'cheesecat', 'hamster', 'capybara', 'cub', 'quokka', 'panda', 'otter',
@@ -12,14 +12,12 @@ const VALID_KEYS = [
 
 export async function generateMetadata({ params }) {
   const { catalogKey } = await params;
-  const name = characterName(catalogKey);
-  const title = `${name} 젤리를 얻었어요!`;
-  const description = '조각투두에서 모은 말랑 동물 젤리 컬렉션';
-  const image = VALID_KEYS.includes(catalogKey) ? `/vault/jelly-${catalogKey}.png` : undefined;
+  const { title, description } = bragShareText(catalogKey);
+  // OG 이미지는 같은 폴더의 opengraph-image.jsx(Next.js 파일 컨벤션)가 캐릭터별로 그려서 자동으로 연결한다
   return {
     title,
     description,
-    openGraph: { title, description, images: image ? [image] : undefined },
+    openGraph: { title, description },
   };
 }
 

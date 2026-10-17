@@ -1,0 +1,41 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="231.628" height="264.558" viewBox="0 0 231.628 264.558" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="&#236;&#149;&#140; &#236;&#157;&#180;&#235;&#175;&#184;&#236;&#167;&#128;">
+<g id="Ellipse 1" filter="url(#filter0_d_0_4)">
+<path d="M175.814 132.279C175.814 174.51 154.532 208.744 115.814 208.744C77.0955 208.744 55.814 174.51 55.814 132.279C55.814 90.0486 82.6769 55.814 115.814 55.814C148.951 55.814 175.814 90.0486 175.814 132.279Z" fill="url(#paint0_linear_0_4)"/>
+</g>
+<g id="Ellipse 2" filter="url(#filter1_f_0_4)">
+<ellipse cx="100.817" cy="87.2003" rx="18.461" ry="12.2791" transform="rotate(-33.7605 100.817 87.2003)" fill="white"/>
+</g>
+<g id="Ellipse 3" filter="url(#filter2_f_0_4)">
+<ellipse cx="135.87" cy="183.207" rx="29.9263" ry="13.0572" transform="rotate(-33.7605 135.87 183.207)" fill="#E5B0FF" fill-opacity="0.2"/>
+</g>
+</g>
+<defs>
+<filter id="filter0_d_0_4" x="0" y="0" width="231.628" height="264.558" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+<feOffset/>
+<feGaussianBlur stdDeviation="27.907"/>
+<feComposite in2="hardAlpha" operator="out"/>
+<feColorMatrix type="matrix" values="0 0 0 0 1 0 0 0 0 0.469802 0 0 0 0 0.964653 0 0 0 0.6 0"/>
+<feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_0_4"/>
+<feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_0_4" result="shape"/>
+</filter>
+<filter id="filter1_f_0_4" x="70.0625" y="58.774" width="61.5083" height="56.8527" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+<feGaussianBlur stdDeviation="6.97674" result="effect1_foregroundBlur_0_4"/>
+</filter>
+<filter id="filter2_f_0_4" x="95.994" y="149.391" width="79.753" height="67.6315" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+<feGaussianBlur stdDeviation="6.97674" result="effect1_foregroundBlur_0_4"/>
+</filter>
+<linearGradient id="paint0_linear_0_4" x1="95.7209" y1="60.2791" x2="148.186" y2="198.419" gradientUnits="userSpaceOnUse">
+<stop stop-color="#EBCDC6"/>
+<stop offset="0.427314" stop-color="#D7D7FF"/>
+<stop offset="0.725962" stop-color="#BBB5D7"/>
+<stop offset="1" stop-color="#9C8FB1"/>
+</linearGradient>
+</defs>
+</svg>

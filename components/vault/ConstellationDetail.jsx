@@ -11,6 +11,7 @@ import Starfield from './Starfield';
 import { loadConstellationDays } from '../../lib/vaultData';
 import { getOrCreateInviteCode } from '../../lib/jelly';
 import { track, EVENTS } from '../../lib/mixpanel';
+import { bragShareText } from '../../lib/encouragementCards';
 
 // 별자리별 캐릭터 젤리 이미지 — 아직 전용 이미지가 없는 별자리는 기본(검은고양이)을 재사용.
 // 새 이미지가 생기면 이 매핑에 한 줄만 추가하면 된다. 항상 JellyCharacter를 통해서만 그리므로
@@ -34,7 +35,7 @@ export const JELLY_SRC_BY_KEY = {
   cub: '/vault/jelly-cub.png',
 };
 
-export default function ConstellationDetail({ c, onBack }) {
+export default function ConstellationDetail({ c, inviteDone, onBack }) {
   const [days, setDays] = useState(null);
   const [shareState, setShareState] = useState('idle'); // 'idle' | 'sharing' | 'copied'
 
@@ -42,19 +43,28 @@ export default function ConstellationDetail({ c, onBack }) {
     if (shareState === 'sharing') return;
     setShareState('sharing');
     try {
-      const code = await getOrCreateInviteCode();
-      if (!code) {
-        setShareState('idle');
-        return;
-      }
-      const url = `${window.location.origin}/invite/${code}`;
-      track(EVENTS.INVITE_CREATED, { constellation_id: c.id });
-      if (navigator.share) {
-        await navigator.share({
+      // 이벤트 참여 전엔 초대 링크(선물 OG), 참여 후엔 보상이 없으니 지금 보는 캐릭터 자랑 링크(캐릭터 OG)
+      let share;
+      if (inviteDone) {
+        const { title, description } = bragShareText(c.catalogKey);
+        share = { title, text: description, url: `${window.location.origin}/brag/${c.catalogKey}` };
+        track(EVENTS.BRAG_SHARED, { constellation_id: c.id, catalog_key: c.catalogKey });
+      } else {
+        const code = await getOrCreateInviteCode();
+        if (!code) {
+          setShareState('idle');
+          return;
+        }
+        share = {
           title: '말랑말랑, 동물 젤리 선물이 도착했어요',
           text: '알을 깨면 어떤 젤리가 나올까요?',
-          url,
-        });
+          url: `${window.location.origin}/invite/${code}`,
+        };
+        track(EVENTS.INVITE_CREATED, { constellation_id: c.id });
+      }
+      const { url } = share;
+      if (navigator.share) {
+        await navigator.share(share);
         setShareState('idle');
       } else {
         await navigator.clipboard.writeText(url);
@@ -139,7 +149,7 @@ export default function ConstellationDetail({ c, onBack }) {
       {/* 공유 버튼 + 옆(왼쪽) 안내 말풍선 — 같은 줄에 두어 세로 중앙을 자동으로 맞춘다 */}
       <div className="absolute right-4 z-30 flex items-center gap-8px" style={{ top: 'calc(32px + env(safe-area-inset-top))' }}>
         {/* 안내용 — 누르는 버튼 아님(pointer-events-none), 실제 공유는 오른쪽 아이콘 버튼으로 */}
-        {shareState !== 'copied' && (
+        {shareState !== 'copied' && !inviteDone && (
           <div
             className="pointer-events-none relative flex items-center justify-center rounded-12 px-12px py-8px"
             style={{ background: 'var(--color-vault-amber)' }}
@@ -151,7 +161,7 @@ export default function ConstellationDetail({ c, onBack }) {
           </div>
         )}
 
-        {/* 공유 버튼 — 초대 링크 생성(유저당 고정 1개) 후 공유시트, 없으면 클립보드 복사 */}
+        {/* 공유 버튼 — 초대 링크(유저당 고정 1개) 또는 자랑 링크로 공유시트, 없으면 클립보드 복사 */}
         <button
           type="button"
           onClick={handleShare}

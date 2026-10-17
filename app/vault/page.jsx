@@ -109,7 +109,7 @@ export default function VaultPage() {
               if (view.phase === 'closing') setView(null);
             }}
           >
-            <ConstellationDetail c={view.c} onBack={back} />
+            <ConstellationDetail c={view.c} inviteDone={!!data?.inviteDone} onBack={back} />
           </div>
         )}
 
