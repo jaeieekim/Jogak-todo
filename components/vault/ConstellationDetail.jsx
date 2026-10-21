@@ -11,7 +11,6 @@ import Starfield from './Starfield';
 import { loadConstellationDays } from '../../lib/vaultData';
 import { getOrCreateInviteCode } from '../../lib/jelly';
 import { track, EVENTS } from '../../lib/mixpanel';
-import { bragShareText } from '../../lib/encouragementCards';
 
 // 별자리별 캐릭터 젤리 이미지 — 아직 전용 이미지가 없는 별자리는 기본(검은고양이)을 재사용.
 // 새 이미지가 생기면 이 매핑에 한 줄만 추가하면 된다. 항상 JellyCharacter를 통해서만 그리므로
@@ -43,11 +42,12 @@ export default function ConstellationDetail({ c, inviteDone, onBack }) {
     if (shareState === 'sharing') return;
     setShareState('sharing');
     try {
-      // 이벤트 참여 전엔 초대 링크(선물 OG), 참여 후엔 보상이 없으니 지금 보는 캐릭터 자랑 링크(캐릭터 OG)
-      let share;
+      // 이벤트 참여 전엔 초대 링크(선물 OG), 참여 후엔 보상이 없으니 지금 보는 캐릭터 자랑 링크(캐릭터 OG).
+      // 공유시트엔 url만 넘긴다 — title/text를 같이 넘기면 카톡이 OG 카드와 별개로 텍스트 메시지를 하나 더 보낸다.
+      // 제목·설명은 링크 페이지의 OG 메타(app/invite·app/brag)가 카드에 담는다.
+      let url;
       if (inviteDone) {
-        const { title, description } = bragShareText(c.catalogKey);
-        share = { title, text: description, url: `${window.location.origin}/brag/${c.catalogKey}` };
+        url = `${window.location.origin}/brag/${c.catalogKey}`;
         track(EVENTS.BRAG_SHARED, { constellation_id: c.id, catalog_key: c.catalogKey });
       } else {
         const code = await getOrCreateInviteCode();
@@ -55,16 +55,11 @@ export default function ConstellationDetail({ c, inviteDone, onBack }) {
           setShareState('idle');
           return;
         }
-        share = {
-          title: '말랑말랑, 동물 젤리 선물이 도착했어요',
-          text: '알을 깨면 어떤 젤리가 나올까요?',
-          url: `${window.location.origin}/invite/${code}`,
-        };
+        url = `${window.location.origin}/invite/${code}`;
         track(EVENTS.INVITE_CREATED, { constellation_id: c.id });
       }
-      const { url } = share;
       if (navigator.share) {
-        await navigator.share(share);
+        await navigator.share({ url });
         setShareState('idle');
       } else {
         await navigator.clipboard.writeText(url);
