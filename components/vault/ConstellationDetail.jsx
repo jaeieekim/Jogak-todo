@@ -149,13 +149,13 @@ export default function ConstellationDetail({ c, inviteDone, onBack }) {
       {/* 공유 버튼 + 옆(왼쪽) 안내 말풍선 — 같은 줄에 두어 세로 중앙을 자동으로 맞춘다 */}
       <div className="absolute right-4 z-30 flex items-center gap-8px" style={{ top: 'calc(32px + env(safe-area-inset-top))' }}>
         {/* 안내용 — 누르는 버튼 아님(pointer-events-none), 실제 공유는 오른쪽 아이콘 버튼으로 */}
-        {shareState !== 'copied' && !inviteDone && (
+        {shareState !== 'copied' && (
           <div
             className="pointer-events-none relative flex items-center justify-center rounded-12 px-12px py-8px"
             style={{ background: 'var(--color-vault-amber)' }}
           >
             <span className="whitespace-nowrap text-vault-12 font-semibold" style={{ color: 'var(--color-vault-black)' }}>
-              🎁 친구에게 공유하고 젤리 받기
+              {inviteDone ? '✨ 얻은 캐릭터를 친구에게 자랑해요' : '🎁 친구에게 공유하고 젤리 받기'}
             </span>
             <span aria-hidden className="absolute right-0 top-1/2 h-10px w-10px -translate-y-1/2 translate-x-1/2 rotate-45" style={{ background: 'var(--color-vault-amber)' }} />
           </div>

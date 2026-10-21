@@ -7,13 +7,14 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import InviteDraw from '../../../components/InviteDraw';
-import { ensureJellyAccount, isLoggedIn, signInWithKakao, claimInviteGift, retryKakaoIfIdentityConflict } from '../../../lib/jelly';
+import { ensureJellyAccount, isLoggedIn, signInWithKakao, claimInviteGift, retryKakaoIfIdentityConflict, getMyInviteCode } from '../../../lib/jelly';
 import { track, EVENTS } from '../../../lib/mixpanel';
 
 export default function InviteClient({ code }) {
   const router = useRouter();
   const [checking, setChecking] = useState(true);
   const [existingUser, setExistingUser] = useState(false);
+  const [ownLink, setOwnLink] = useState(false); // 내가 공유한 링크를 내가 연 경우 — 기존 유저 안내 대신 전용 안내
   const [resumeAfterLogin, setResumeAfterLogin] = useState(false);
 
   useEffect(() => {
@@ -35,6 +36,7 @@ export default function InviteClient({ code }) {
       track(EVENTS.INVITE_LINK_OPENED, { code });
       if (await isLoggedIn()) {
         setExistingUser(true); // 이미 카카오 로그인된 유저 — 뽑기 UI 자체를 안 보여줌
+        if ((await getMyInviteCode()) === code) setOwnLink(true);
       }
       setChecking(false);
     })();
@@ -66,9 +68,15 @@ export default function InviteClient({ code }) {
             style={{ background: 'var(--color-vault-sky-deep)' }}
           >
             <p className="text-vault-13" style={{ color: 'var(--color-vault-white)' }}>
-              이미 계정이 있어요!
-              <br />
-              이 선물은 최초 공유와 최초 가입 시에 한 번만 받을 수 있어요.
+              {ownLink ? (
+                '내가 공유한 링크로는 이벤트에 참여할 수 없어요.'
+              ) : (
+                <>
+                  이미 계정이 있어요!
+                  <br />
+                  이 선물은 최초 공유와 최초 가입 시에 한 번만 받을 수 있어요.
+                </>
+              )}
             </p>
             <button
               type="button"

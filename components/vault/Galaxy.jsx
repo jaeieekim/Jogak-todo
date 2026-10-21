@@ -300,8 +300,8 @@ export default function Galaxy({ data, onOpen }) {
         </button>
 
         {/* 공유 유도(초대 링크, 보상 있음) — 누르면 최근 완성 별자리 상세로 들어가고, 실제 공유는 상세의 공유 버튼에서.
-            완성한 별자리가 하나도 없으면 들어갈 상세가 없으니 숨김. 이벤트에 이미 참여했으면(공유자당 1회) 숨김. */}
-        {latest && !data.inviteDone && (
+            완성한 별자리가 하나도 없으면 들어갈 상세가 없으니 숨김. 이벤트에 이미 참여했으면(공유자당 1회) 자랑 유도 문구로. */}
+        {latest && (
           <button
             type="button"
             onClick={goToLatest}
@@ -309,7 +309,7 @@ export default function Galaxy({ data, onOpen }) {
             style={{ background: 'var(--color-vault-amber)', color: 'var(--color-vault-black)' }}
           >
             <span aria-hidden className="absolute left-1/2 top-0 h-8px w-8px -translate-x-1/2 -translate-y-1/2 rotate-45" style={{ background: 'var(--color-vault-amber)' }} />
-            🎁 공유하고 젤리 선물 받기
+            {data.inviteDone ? '✨ 얻은 캐릭터를 친구에게 자랑해요' : '🎁 공유하고 젤리 선물 받기'}
           </button>
         )}
       </div>

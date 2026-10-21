@@ -33,7 +33,7 @@ const ORB_TARGETS = [
 
 const STATUS_MESSAGE = {
   invalid_code: '링크가 올바르지 않아요.',
-  self_referral: '내가 만든 링크로는 받을 수 없어요.',
+  self_referral: '내가 공유한 링크로는 이벤트에 참여할 수 없어요.',
   existing_user: '이미 계정이 있으시네요 — 이 선물은 새로 시작하는 분을 위한 거예요.',
   already_claimed: '이미 받으셨어요.',
   nothing_to_claim: '지금 받을 수 있는 선물이 없어요.',
